@@ -188,7 +188,8 @@ body::after{
 <div id="loading-screen">
   <div class="spinner spin"></div>
   <div style="font-size:13px;letter-spacing:2px;color:var(--boom)">CONNECTING TO DERIV</div>
-  <div style="font-size:10px;color:var(--muted)">Establishing WebSocket · Live synthetic data</div>
+  <div id="loading-status" style="font-size:10px;color:var(--muted)">Establishing WebSocket · Live synthetic data</div>
+  <div id="loading-errors" style="font-size:9px;color:#ff4d6d;max-width:320px;text-align:center;margin-top:8px;line-height:1.6"></div>
 </div>
 
 <!-- Error -->
@@ -431,39 +432,71 @@ Object.keys(INSTRUMENTS).forEach(k => {
 ═══════════════════════════════════════════════════════════════ */
 const DERIV_TOKEN = 'avkdP7c31FHmKHf'
 
+// Multiple endpoints to try in order
+const WS_ENDPOINTS = [
+  'wss://ws.binaryws.com/websockets/v3?app_id=16929',
+  'wss://ws.binaryws.com/websockets/v3?app_id=1089',
+  'wss://ws.derivws.com/websockets/v3?app_id=16929',
+]
+let wsEndpointIdx = 0
+
 function connectDeriv(symbol, onTick, onError) {
-  // Use Deriv's official WebSocket endpoint
-  // app_id=16929 is Deriv's own SmartTrader app — publicly usable for read-only data
-  const ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=16929')
-  let authorized = false
+  const url = WS_ENDPOINTS[wsEndpointIdx % WS_ENDPOINTS.length]
+  const ws = new WebSocket(url)
+  let gotTick = false
+
+  // Update loading message
+  const lbl = document.querySelector('#loading-screen div:nth-child(3)')
+  if (lbl) lbl.textContent = `Trying ${url.split('?')[0].split('//')[1]}...`
 
   ws.onopen = () => {
-    // Authorize with token to access Boom/Crash synthetic indices
-    ws.send(JSON.stringify({ authorize: DERIV_TOKEN }))
+    // First try WITHOUT auth — ticks are public on Deriv
+    ws.send(JSON.stringify({ ticks: symbol, subscribe: 1 }))
+    // If no tick in 4s, try with auth
+    setTimeout(() => {
+      if (!gotTick) {
+        ws.send(JSON.stringify({ authorize: DERIV_TOKEN }))
+      }
+    }, 4000)
   }
+
   ws.onmessage = (msg) => {
     try {
       const data = JSON.parse(msg.data)
+
+      // If unauthorized error on ticks, authorize then retry
+      if (data.error && data.error.code === 'AuthorizationRequired') {
+        ws.send(JSON.stringify({ authorize: DERIV_TOKEN }))
+        return
+      }
+
       if (data.msg_type === 'authorize') {
-        if (data.error) {
-          onError('Auth failed: ' + data.error.message)
-          return
-        }
-        authorized = true
+        if (data.error) { onError('Auth: ' + data.error.message); return }
+        // Authorized — now subscribe
         ws.send(JSON.stringify({ ticks: symbol, subscribe: 1 }))
+        return
       }
+
       if (data.msg_type === 'tick') {
+        gotTick = true
         onTick(data.tick)
+        return
       }
-      if (data.error && data.msg_type !== 'authorize') {
-        onError(data.error.message)
+
+      if (data.error) {
+        onError(`[${data.msg_type}] ${data.error.message}`)
       }
     } catch(e) {
       onError('Parse error: ' + e.message)
     }
   }
-  ws.onerror = () => onError('WebSocket failed to connect')
+
+  ws.onerror = () => {
+    wsEndpointIdx++
+    setTimeout(() => connectDeriv(symbol, onTick, onError), 2000)
+  }
   ws.onclose = (e) => {
+    if (!gotTick) wsEndpointIdx++
     setTimeout(() => connectDeriv(symbol, onTick, onError), 3000)
   }
   return ws
@@ -476,9 +509,9 @@ function connectAll() {
       (tick) => handleTick(key, tick),
       (err)  => {
         console.warn(key, err)
-        // Show error on loading screen so user knows what failed
-        const em = document.getElementById('error-msg')
-        if (em) em.textContent = err
+        // Show errors live on loading screen
+        const el = document.getElementById('loading-errors')
+        if (el) el.textContent = key + ': ' + err
       }
     )
   })
