@@ -432,73 +432,72 @@ Object.keys(INSTRUMENTS).forEach(k => {
 ═══════════════════════════════════════════════════════════════ */
 const DERIV_TOKEN = 'avkdP7c31FHmKHf'
 
-// Multiple endpoints to try in order
-const WS_ENDPOINTS = [
-  'wss://ws.binaryws.com/websockets/v3?app_id=16929',
-  'wss://ws.binaryws.com/websockets/v3?app_id=1089',
-  'wss://ws.derivws.com/websockets/v3?app_id=16929',
-]
-let wsEndpointIdx = 0
+// Symbol map — will be populated from active_symbols response
+let SYMBOL_MAP = {
+  BOOM500:   'BOOM500',
+  CRASH1000: 'CRASH1000',
+  CRASH300:  'CRASH300',
+}
+
+function createWS(onOpen) {
+  // Use the Deriv API explorer's own app_id — confirmed working
+  const ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=16929')
+  ws.onopen = onOpen
+  return ws
+}
 
 function connectDeriv(symbol, onTick, onError) {
-  const url = WS_ENDPOINTS[wsEndpointIdx % WS_ENDPOINTS.length]
-  const ws = new WebSocket(url)
-  let gotTick = false
-
-  // Update loading message
-  const lbl = document.querySelector('#loading-screen div:nth-child(3)')
-  if (lbl) lbl.textContent = `Trying ${url.split('?')[0].split('//')[1]}...`
-
-  ws.onopen = () => {
-    // First try WITHOUT auth — ticks are public on Deriv
-    ws.send(JSON.stringify({ ticks: symbol, subscribe: 1 }))
-    // If no tick in 4s, try with auth
-    setTimeout(() => {
-      if (!gotTick) {
-        ws.send(JSON.stringify({ authorize: DERIV_TOKEN }))
-      }
-    }, 4000)
-  }
+  const ws = createWS(() => {
+    ws.send(JSON.stringify({ authorize: DERIV_TOKEN }))
+  })
 
   ws.onmessage = (msg) => {
     try {
       const data = JSON.parse(msg.data)
 
-      // If unauthorized error on ticks, authorize then retry
-      if (data.error && data.error.code === 'AuthorizationRequired') {
-        ws.send(JSON.stringify({ authorize: DERIV_TOKEN }))
+      if (data.msg_type === 'authorize') {
+        if (data.error) { onError('Auth: ' + data.error.message); return }
+        // Auth OK — query active symbols to find correct names
+        ws.send(JSON.stringify({ active_symbols: 'brief', product_type: 'basic' }))
         return
       }
 
-      if (data.msg_type === 'authorize') {
-        if (data.error) { onError('Auth: ' + data.error.message); return }
-        // Authorized — now subscribe
-        ws.send(JSON.stringify({ ticks: symbol, subscribe: 1 }))
+      if (data.msg_type === 'active_symbols') {
+        if (data.error) { onError('Symbols: ' + data.error.message); return }
+        const syms = data.active_symbols || []
+        // Find boom/crash symbols available on this account
+        const available = {}
+        syms.forEach(s => {
+          const n = s.symbol.toUpperCase()
+          if (n.includes('BOOM') || n.includes('CRASH')) available[n] = s.symbol
+        })
+        // Update symbol map with actual available symbols
+        Object.keys(SYMBOL_MAP).forEach(k => {
+          if (available[k]) SYMBOL_MAP[k] = available[k]
+          // Also try with 'N' suffix (some regions use BOOM500N etc)
+          else if (available[k + 'N']) SYMBOL_MAP[k] = available[k + 'N']
+        })
+        // Now subscribe to the actual symbol
+        const actualSymbol = SYMBOL_MAP[symbol] || symbol
+        ws.send(JSON.stringify({ ticks: actualSymbol, subscribe: 1 }))
         return
       }
 
       if (data.msg_type === 'tick') {
-        gotTick = true
         onTick(data.tick)
         return
       }
 
       if (data.error) {
-        onError(`[${data.msg_type}] ${data.error.message}`)
+        onError(`[${data.msg_type || '?'}] ${data.error.message}`)
       }
     } catch(e) {
       onError('Parse error: ' + e.message)
     }
   }
 
-  ws.onerror = () => {
-    wsEndpointIdx++
-    setTimeout(() => connectDeriv(symbol, onTick, onError), 2000)
-  }
-  ws.onclose = (e) => {
-    if (!gotTick) wsEndpointIdx++
-    setTimeout(() => connectDeriv(symbol, onTick, onError), 3000)
-  }
+  ws.onerror = () => onError('WebSocket connection failed')
+  ws.onclose = () => { setTimeout(() => connectDeriv(symbol, onTick, onError), 4000) }
   return ws
 }
 
