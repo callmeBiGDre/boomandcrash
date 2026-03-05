@@ -429,26 +429,27 @@ Object.keys(INSTRUMENTS).forEach(k => {
 /* ═══════════════════════════════════════════════════════════════
    DERIV WEBSOCKET
 ═══════════════════════════════════════════════════════════════ */
-const DERIV_TOKEN  = 'avkdP7c31FHmKHf'
-const DERIV_APP_ID = '1089'
+const DERIV_TOKEN = 'avkdP7c31FHmKHf'
+const DERIV_WS    = 'wss://ws.derivws.com/websockets/v3?app_id=1089'
 
 function connectDeriv(symbol, onTick, onError) {
-  const ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${DERIV_APP_ID}`)
+  const ws = new WebSocket(DERIV_WS)
   ws.onopen = () => {
+    // Send authorize first — required for Boom/Crash synthetic indices
     ws.send(JSON.stringify({ authorize: DERIV_TOKEN }))
   }
   ws.onmessage = (msg) => {
     const data = JSON.parse(msg.data)
     if (data.msg_type === 'authorize') {
+      if (data.error) { onError('Deriv auth error: ' + data.error.message); return }
+      // Auth OK — now subscribe to live ticks
       ws.send(JSON.stringify({ ticks: symbol, subscribe: 1 }))
     }
     if (data.msg_type === 'tick') onTick(data.tick)
-    if (data.error) onError(data.error.message)
+    if (data.error && data.msg_type !== 'authorize') onError(data.error.message)
   }
-  ws.onerror = () => onError('WebSocket error')
-  ws.onclose = () => {
-    setTimeout(() => connectDeriv(symbol, onTick, onError), 3000)
-  }
+  ws.onerror = (e) => onError('WebSocket connection failed — check internet connection')
+  ws.onclose = () => { setTimeout(() => connectDeriv(symbol, onTick, onError), 3000) }
   return ws
 }
 
@@ -457,7 +458,12 @@ function connectAll() {
     const inst = INSTRUMENTS[key]
     allWS[key] = connectDeriv(inst.deriv,
       (tick) => handleTick(key, tick),
-      (err)  => console.warn(key, err)
+      (err)  => {
+        console.warn(key, err)
+        // Show error on loading screen so user knows what failed
+        const em = document.getElementById('error-msg')
+        if (em) em.textContent = err
+      }
     )
   })
 }
@@ -1281,9 +1287,10 @@ setTimeout(() => {
   if (document.getElementById('loading-screen').style.display !== 'none') {
     document.getElementById('loading-screen').style.display = 'none'
     document.getElementById('error-screen').style.display  = 'flex'
-    document.getElementById('error-msg').textContent = 'Could not connect to Deriv WebSocket. Check your internet connection and try again.'
+    const em = document.getElementById('error-msg')
+    if (!em.textContent) em.textContent = 'Could not connect to Deriv WebSocket after 15 seconds. Check your internet and try again.'
   }
-}, 10000)
+}, 15000)
 </script>
 </body>
 </html>
