@@ -8,191 +8,83 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:      #04080f;
-  --bg2:     #080f1a;
-  --bg3:     #0c1524;
-  --bg4:     #060d18;
-  --border:  #0f2040;
-  --boom:    #00e5ff;
-  --crash:   #ff3d71;
-  --bull:    #00d68f;
-  --bear:    #ff4d6d;
-  --warn:    #ffaa00;
-  --spike:   #ffe600;
-  --text:    #b8c8e8;
-  --muted:   #2a4060;
-  --dim:     #111e30;
+  --bg:#04080f;--bg2:#080f1a;--bg3:#0c1524;--border:#0f2040;
+  --boom:#00e5ff;--crash:#ff3d71;--bull:#00d68f;--bear:#ff4d6d;
+  --warn:#ffaa00;--spike:#ffe600;--text:#b8c8e8;--muted:#2a4060;--dim:#111e30;
 }
 html,body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono','Courier New',monospace;min-height:100vh;overflow-x:hidden}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:#0f2040}
-
-/* ── Animations ── */
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
 @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-@keyframes fadein{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
-@keyframes spike-flash{0%{background:rgba(255,230,0,.25)}100%{background:transparent}}
+@keyframes fadein{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@keyframes spike-flash{0%{background:rgba(255,230,0,.2)}100%{background:transparent}}
+@keyframes glow-pulse{0%,100%{text-shadow:0 0 8px currentColor}50%{text-shadow:0 0 28px currentColor,0 0 52px currentColor}}
 @keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
-@keyframes glow-pulse{0%,100%{text-shadow:0 0 8px currentColor}50%{text-shadow:0 0 24px currentColor,0 0 48px currentColor}}
 @keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-@keyframes count-up{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
-
 .blink{animation:pulse 1.2s infinite}
-.fadein{animation:fadein .35s ease}
+.fadein{animation:fadein .3s ease}
 .glow{animation:glow-pulse 2s infinite}
 .spin{animation:spin 1s linear infinite}
-.spike-anim{animation:spike-flash .6s ease forwards}
-.count-anim{animation:count-up .3s ease}
-
-/* ── Scanline overlay ── */
-body::before{
-  content:'';position:fixed;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(transparent,rgba(0,229,255,.04),transparent);
-  animation:scanline 8s linear infinite;pointer-events:none;z-index:0;
-}
-
-/* ── Grid noise texture ── */
-body::after{
-  content:'';position:fixed;inset:0;
-  background-image:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,229,255,.015) 2px,rgba(0,229,255,.015) 4px),
-                   repeating-linear-gradient(90deg,transparent,transparent 2px,rgba(0,229,255,.015) 2px,rgba(0,229,255,.015) 4px);
-  pointer-events:none;z-index:0;
-}
-
-/* ── Header ── */
-#header{
-  background:linear-gradient(180deg,#060d18 0%,#04080f 100%);
-  border-bottom:1px solid var(--border);
-  padding:10px 20px;display:flex;align-items:center;justify-content:space-between;
-  position:sticky;top:0;z-index:100;
-}
+body::before{content:'';position:fixed;top:0;left:0;right:0;height:2px;background:linear-gradient(transparent,rgba(0,229,255,.04),transparent);animation:scanline 8s linear infinite;pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,229,255,.012) 2px,rgba(0,229,255,.012) 4px),repeating-linear-gradient(90deg,transparent,transparent 2px,rgba(0,229,255,.012) 2px,rgba(0,229,255,.012) 4px);pointer-events:none;z-index:0}
+#spike-overlay{position:fixed;inset:0;pointer-events:none;z-index:200;display:none}
+#header{background:linear-gradient(180deg,#060d18,#04080f);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
 .logo{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;letter-spacing:3px;color:var(--boom)}
 .logo span{color:var(--crash)}
-
-/* ── Instrument Selector ── */
 .inst-tabs{display:flex;gap:6px}
-.inst-tab{
-  cursor:pointer;padding:5px 14px;border-radius:4px;font-size:11px;letter-spacing:2px;
-  border:1px solid var(--muted);color:var(--muted);background:none;font-family:inherit;
-  transition:all .2s;
-}
+.inst-tab{cursor:pointer;padding:5px 14px;border-radius:4px;font-size:11px;letter-spacing:2px;border:1px solid var(--muted);color:var(--muted);background:none;font-family:inherit;transition:all .2s}
 .inst-tab:hover{border-color:var(--text);color:var(--text)}
 .inst-tab.boom.on{border-color:var(--boom);color:var(--boom);background:rgba(0,229,255,.08);box-shadow:0 0 12px rgba(0,229,255,.15)}
 .inst-tab.crash.on{border-color:var(--crash);color:var(--crash);background:rgba(255,61,113,.08);box-shadow:0 0 12px rgba(255,61,113,.15)}
-
-/* ── Ticker tape ── */
-#ticker-wrap{background:var(--dim);border-bottom:1px solid var(--border);overflow:hidden;height:26px;position:relative}
+#ticker-wrap{background:var(--dim);border-bottom:1px solid var(--border);overflow:hidden;height:26px}
 #ticker{display:flex;white-space:nowrap;animation:ticker 30s linear infinite;font-size:10px;line-height:26px;padding:0 20px}
 .tick-item{margin-right:40px;color:var(--muted)}
 .tick-item span{color:var(--text)}
-
-/* ── App layout ── */
-#app{max-width:1280px;margin:0 auto;padding:16px;position:relative;z-index:1}
-
-/* ── Signal Hero ── */
-#hero{
-  border-radius:12px;padding:20px;margin-bottom:14px;
-  position:relative;overflow:hidden;border:1px solid var(--border);
-  background:linear-gradient(135deg,#060d18 0%,#04080f 100%);
-}
-#hero .corner-tl,#hero .corner-tr,#hero .corner-bl,#hero .corner-br{
-  position:absolute;width:16px;height:16px;
-}
-#hero .corner-tl{top:0;left:0;border-top:2px solid;border-left:2px solid}
-#hero .corner-tr{top:0;right:0;border-top:2px solid;border-right:2px solid}
-#hero .corner-bl{bottom:0;left:0;border-bottom:2px solid;border-left:2px solid}
-#hero .corner-br{bottom:0;right:0;border-bottom:2px solid;border-right:2px solid}
-
+#loading-screen,#error-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:999}
+.spinner{width:32px;height:32px;border:2px solid var(--boom);border-top-color:transparent;border-radius:50%}
+#app{max-width:1280px;margin:0 auto;padding:16px;position:relative;z-index:1;display:none}
+#hero{border-radius:12px;padding:20px;margin-bottom:14px;position:relative;overflow:hidden;border:1px solid var(--border);background:linear-gradient(135deg,#060d18,#04080f)}
+.corner{position:absolute;width:16px;height:16px}
+#c-tl{top:0;left:0;border-top:2px solid;border-left:2px solid}
+#c-tr{top:0;right:0;border-top:2px solid;border-right:2px solid}
+#c-bl{bottom:0;left:0;border-bottom:2px solid;border-left:2px solid}
+#c-br{bottom:0;right:0;border-bottom:2px solid;border-right:2px solid}
 .hero-grid{display:grid;grid-template-columns:auto 1fr auto auto;gap:24px;align-items:center}
 .sig-label{font-family:'Rajdhani',sans-serif;font-size:72px;font-weight:700;line-height:1;transition:all .4s}
 .sig-sub{font-size:9px;letter-spacing:3px;color:var(--muted);margin-bottom:4px}
-.price-display{font-family:'Rajdhani',sans-serif;font-size:44px;font-weight:600;color:#f0f8ff;letter-spacing:1px}
-
-/* ── Tick Counter ── */
-.tick-counter-box{
-  background:var(--bg3);border:1px solid var(--border);border-radius:10px;
-  padding:14px 18px;text-align:center;min-width:140px;
-}
-.tick-num{font-family:'Rajdhani',sans-serif;font-size:52px;font-weight:700;line-height:1}
+.price-display{font-family:'Rajdhani',sans-serif;font-size:44px;font-weight:600;color:#f0f8ff}
+.tick-counter-box,.spike-zone-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px 18px;text-align:center;min-width:140px}
+.tick-num,.spike-prob{font-family:'Rajdhani',sans-serif;font-size:48px;font-weight:700;line-height:1}
 .tick-bar-wrap{height:6px;background:var(--dim);border-radius:3px;overflow:hidden;margin-top:8px}
-.tick-bar{height:100%;border-radius:3px;transition:width .3s}
-
-/* ── Spike zone indicator ── */
-.spike-zone-box{
-  background:var(--bg3);border:1px solid var(--border);border-radius:10px;
-  padding:14px 18px;text-align:center;min-width:160px;
-}
-.spike-prob{font-family:'Rajdhani',sans-serif;font-size:40px;font-weight:700}
-
-/* ── Trade levels ── */
+.tick-bar{height:100%;border-radius:3px;transition:width .4s}
 .levels-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
 .level-box{background:var(--bg3);border-radius:6px;padding:8px 12px;border:1px solid transparent}
-
-/* ── Main grid ── */
 .main-grid{display:grid;grid-template-columns:1fr 300px;gap:14px}
 .col-left,.col-right{display:flex;flex-direction:column;gap:12px}
-
-/* ── Cards ── */
 .card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden}
 .card-label{font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:10px}
-
-/* ── Tabs ── */
 .tabs{display:flex;gap:5px;flex-wrap:wrap}
 .tab{cursor:pointer;padding:4px 12px;border-radius:4px;font-size:10px;letter-spacing:1px;border:1px solid transparent;color:var(--muted);background:none;font-family:inherit;transition:all .2s}
 .tab:hover{color:var(--text);border-color:var(--border)}
 .tab.on{background:var(--bg3);border-color:var(--boom);color:var(--boom)}
-
-/* ── Spike log ── */
-.spike-entry{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--dim)}
-
-/* ── Structure row ── */
-.str-row{display:flex;align-items:center;gap:8px;padding:4px 8px;background:var(--bg3);border-radius:4px;margin-bottom:3px}
-
-/* ── Buttons ── */
 .btn{cursor:pointer;border:none;outline:none;font-family:inherit;transition:all .2s}
 .btn:hover{filter:brightness(1.2);transform:translateY(-1px)}
-
-/* ── Screens ── */
-#loading-screen,#error-screen{
-  position:fixed;inset:0;background:var(--bg);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:14px;z-index:999;
-}
-.spinner{width:32px;height:32px;border:2px solid var(--boom);border-top-color:transparent;border-radius:50%}
-
-/* ── Spike flash overlay ── */
-#spike-overlay{
-  position:fixed;inset:0;pointer-events:none;z-index:200;
-  display:none;
-}
-
-/* ── Post-spike entry card ── */
-.entry-card{
-  border-radius:8px;padding:12px;margin-bottom:6px;
-  border-left:3px solid;
-}
-
-/* ── Responsive ── */
-@media(max-width:900px){
-  .main-grid{grid-template-columns:1fr}
-  .hero-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto auto}
-  .levels-row{grid-template-columns:repeat(2,1fr)}
-}
+.str-row{display:flex;align-items:center;gap:8px;padding:4px 8px;background:var(--bg3);border-radius:4px;margin-bottom:3px}
+.entry-card{border-radius:8px;padding:12px;margin-bottom:6px;border-left:3px solid}
+@media(max-width:900px){.main-grid{grid-template-columns:1fr}.hero-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto auto}.levels-row{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
 
-<!-- Spike flash overlay -->
 <div id="spike-overlay"></div>
 
-<!-- Loading -->
 <div id="loading-screen">
   <div class="spinner spin"></div>
   <div style="font-size:13px;letter-spacing:2px;color:var(--boom)">CONNECTING TO DERIV</div>
-  <div id="loading-status" style="font-size:10px;color:var(--muted)">Establishing WebSocket · Live synthetic data</div>
-  <div id="loading-errors" style="font-size:9px;color:#ff4d6d;max-width:320px;text-align:center;margin-top:8px;line-height:1.6"></div>
+  <div id="loading-status" style="font-size:10px;color:var(--muted)">Fetching live prices via secure proxy…</div>
+  <div id="loading-errors" style="font-size:9px;color:var(--crash);max-width:320px;text-align:center;margin-top:4px;line-height:1.6"></div>
 </div>
 
-<!-- Error -->
 <div id="error-screen" style="display:none">
   <div style="font-size:28px">⚠</div>
   <div style="font-size:13px;color:var(--crash);letter-spacing:1px">CONNECTION FAILED</div>
@@ -200,7 +92,6 @@ body::after{
   <button class="btn" onclick="location.reload()" style="background:rgba(0,229,255,.1);border:1px solid var(--boom);color:var(--boom);padding:7px 18px;border-radius:4px;font-size:10px;letter-spacing:1px">↻ RETRY</button>
 </div>
 
-<!-- Header -->
 <div id="header">
   <div style="display:flex;align-items:center;gap:16px">
     <div class="logo">BOOM <span>&</span> CRASH</div>
@@ -208,8 +99,8 @@ body::after{
   </div>
   <div class="inst-tabs" id="inst-tabs">
     <button class="inst-tab boom on" onclick="switchInstrument('BOOM500',this)">BOOM 500</button>
-    <button class="inst-tab crash" onclick="switchInstrument('CRASH1000',this)">CRASH 1000</button>
-    <button class="inst-tab crash" onclick="switchInstrument('CRASH300',this)">CRASH 300</button>
+    <button class="inst-tab crash"   onclick="switchInstrument('CRASH1000',this)">CRASH 1000</button>
+    <button class="inst-tab crash"   onclick="switchInstrument('CRASH300',this)">CRASH 300</button>
   </div>
   <div style="display:flex;align-items:center;gap:12px">
     <div style="display:flex;align-items:center;gap:5px">
@@ -217,91 +108,70 @@ body::after{
       <span id="conn-label" style="font-size:9px;color:var(--warn)">CONNECTING</span>
     </div>
     <span id="last-ts" style="font-size:9px;color:var(--muted)"></span>
+    <button class="btn" onclick="forceRefresh()" style="background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.2);color:var(--boom);padding:4px 10px;border-radius:4px;font-size:9px;letter-spacing:1px">↻</button>
   </div>
 </div>
 
-<!-- Ticker tape -->
 <div id="ticker-wrap">
   <div id="ticker">
-    <span class="tick-item">BOOM 500 <span id="tk-boom500">—</span></span>
-    <span class="tick-item">CRASH 1000 <span id="tk-crash1000">—</span></span>
-    <span class="tick-item">CRASH 300 <span id="tk-crash300">—</span></span>
-    <span class="tick-item">BOOM 500 <span id="tk-boom500b">—</span></span>
-    <span class="tick-item">CRASH 1000 <span id="tk-crash1000b">—</span></span>
-    <span class="tick-item">CRASH 300 <span id="tk-crash300b">—</span></span>
+    <span class="tick-item">BOOM 500 <span id="tk-BOOM500">—</span></span>
+    <span class="tick-item">CRASH 1000 <span id="tk-CRASH1000">—</span></span>
+    <span class="tick-item">CRASH 300 <span id="tk-CRASH300">—</span></span>
+    <span class="tick-item">BOOM 500 <span id="tk-BOOM500b">—</span></span>
+    <span class="tick-item">CRASH 1000 <span id="tk-CRASH1000b">—</span></span>
+    <span class="tick-item">CRASH 300 <span id="tk-CRASH300b">—</span></span>
   </div>
 </div>
 
-<!-- Main App -->
-<div id="app" style="display:none">
-
-  <!-- Hero -->
+<div id="app">
   <div id="hero">
-    <div class="corner-tl" id="corner-tl"></div>
-    <div class="corner-tr" id="corner-tr"></div>
-    <div class="corner-bl" id="corner-bl"></div>
-    <div class="corner-br" id="corner-br"></div>
-
+    <div class="corner" id="c-tl"></div><div class="corner" id="c-tr"></div>
+    <div class="corner" id="c-bl"></div><div class="corner" id="c-br"></div>
     <div class="hero-grid">
-      <!-- Signal -->
       <div>
         <div class="sig-sub">SIGNAL</div>
         <div class="sig-label glow" id="sig-dir">—</div>
         <div style="display:flex;gap:10px;margin-top:6px;font-size:9px;color:var(--muted)">
           Score <span id="sig-score" style="font-weight:700">—</span>
-          &nbsp; Conf <span id="sig-conf" style="font-weight:700">—</span>
+          &nbsp;Conf <span id="sig-conf" style="font-weight:700">—</span>
         </div>
       </div>
-
-      <!-- Price + levels -->
       <div>
         <div class="sig-sub">LIVE PRICE</div>
         <div class="price-display" id="sig-price">—</div>
         <div class="levels-row" id="levels-row"></div>
       </div>
-
-      <!-- Tick Counter -->
-      <div class="tick-counter-box" id="tick-counter-box">
+      <div class="tick-counter-box">
         <div style="font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:4px">TICKS SINCE SPIKE</div>
         <div class="tick-num" id="tick-count">0</div>
         <div style="font-size:9px;color:var(--muted);margin-top:2px" id="tick-label">—</div>
-        <div class="tick-bar-wrap">
-          <div class="tick-bar" id="tick-bar" style="width:0%"></div>
-        </div>
+        <div class="tick-bar-wrap"><div class="tick-bar" id="tick-bar" style="width:0%"></div></div>
       </div>
-
-      <!-- Spike Probability -->
       <div class="spike-zone-box">
         <div style="font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:4px">SPIKE PROBABILITY</div>
-        <div class="spike-prob" id="spike-prob">—</div>
+        <div class="spike-prob" id="spike-prob-val">—</div>
         <div style="font-size:9px;margin-top:4px" id="spike-zone-label">—</div>
-        <div style="font-size:9px;color:var(--muted);margin-top:6px" id="avg-spike-interval">—</div>
+        <div style="font-size:9px;color:var(--muted);margin-top:6px" id="avg-interval-label">—</div>
       </div>
     </div>
   </div>
 
-  <!-- Main Grid -->
   <div class="main-grid">
-
-    <!-- LEFT -->
     <div class="col-left">
-
-      <!-- Chart -->
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
           <span class="card-label" style="margin:0">LIVE PRICE CHART · LAST 200 TICKS</span>
-          <span style="font-size:9px;color:var(--muted)" id="chart-subtitle">—</span>
+          <span style="font-size:9px;color:var(--muted)" id="chart-sub">—</span>
         </div>
-        <canvas id="chart-canvas" width="700" height="200" style="width:100%;height:200px"></canvas>
+        <canvas id="chart" width="700" height="200" style="width:100%;height:200px"></canvas>
         <div style="display:flex;gap:16px;margin-top:6px;font-size:9px;color:var(--muted)">
           <span><span style="color:var(--spike)">⚡</span> Spike</span>
-          <span><span style="color:var(--bull)">—</span> Uptrend</span>
-          <span><span style="color:var(--bear)">—</span> Downtrend</span>
-          <span><span style="color:rgba(255,255,255,.2)">- -</span> EMA50</span>
+          <span><span style="color:var(--bull)">—</span> Up</span>
+          <span><span style="color:var(--bear)">—</span> Down</span>
+          <span><span style="color:rgba(255,255,255,.2)">--</span> EMA50</span>
         </div>
       </div>
 
-      <!-- Tabs -->
       <div class="tabs">
         <button class="tab on" onclick="switchTab('structure',this)">STRUCTURE</button>
         <button class="tab"    onclick="switchTab('spike',this)">SPIKE ANALYSIS</button>
@@ -310,14 +180,12 @@ body::after{
         <button class="tab"    onclick="switchTab('confluences',this)">CONFLUENCES</button>
       </div>
 
-      <!-- Panels -->
-      <div id="panel-structure"    class="card fadein"></div>
-      <div id="panel-spike"        class="card fadein" style="display:none"></div>
-      <div id="panel-entry"        class="card fadein" style="display:none"></div>
-      <div id="panel-momentum"     class="card fadein" style="display:none"></div>
-      <div id="panel-confluences"  class="card fadein" style="display:none"></div>
+      <div id="panel-structure"   class="card fadein"></div>
+      <div id="panel-spike"       class="card fadein" style="display:none"></div>
+      <div id="panel-entry"       class="card fadein" style="display:none"></div>
+      <div id="panel-momentum"    class="card fadein" style="display:none"></div>
+      <div id="panel-confluences" class="card fadein" style="display:none"></div>
 
-      <!-- Trade Brief -->
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
           <span class="card-label" style="margin:0">◈ TRADE BRIEF</span>
@@ -327,1052 +195,465 @@ body::after{
       </div>
     </div>
 
-    <!-- RIGHT -->
     <div class="col-right">
-
-      <!-- Instrument Info -->
       <div class="card" id="inst-info-card"></div>
-
-      <!-- Spike Log -->
       <div class="card">
         <div class="card-label">SPIKE LOG</div>
-        <div id="spike-log">
-          <div style="font-size:10px;color:var(--muted);text-align:center;padding:8px">Spikes appear here in real time</div>
-        </div>
+        <div id="spike-log"><div style="font-size:10px;color:var(--muted);text-align:center;padding:8px">Spikes appear here in real time</div></div>
       </div>
-
-      <!-- Pattern Signals -->
       <div class="card">
         <div class="card-label">PRICE PATTERNS</div>
         <div id="patterns-body" style="font-size:10px;color:var(--muted)">Analysing…</div>
       </div>
-
-      <!-- Signal History -->
       <div class="card">
         <div class="card-label">SIGNAL HISTORY</div>
         <div id="history-body" style="font-size:10px;color:var(--muted);text-align:center;padding:8px">Signals appear here</div>
       </div>
-
-      <!-- Disclaimer -->
       <div style="background:rgba(255,61,113,.04);border:1px solid rgba(255,61,113,.15);border-radius:8px;padding:10px;font-size:9px;color:var(--muted);line-height:1.7">
         ⚠ <span style="color:var(--crash)">DISCLAIMER</span><br>
-        Boom & Crash indices are synthetic instruments. Spikes are algorithmically generated and cannot be precisely predicted. Educational use only. Not financial advice. Max 1% risk per trade.
+        Boom & Crash indices are synthetic instruments. Spikes cannot be precisely predicted. Educational use only. Not financial advice.
       </div>
     </div>
   </div>
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════════════════════
-   API KEY — Replace with your new Anthropic key after regenerating
-═══════════════════════════════════════════════════════════════ */
-const ANT_KEY = 'YOUR_NEW_ANTHROPIC_KEY_HERE'
-
-/* ═══════════════════════════════════════════════════════════════
-   INSTRUMENT CONFIG
-═══════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════
+   CONFIG
+═══════════════════════════════════════════════════ */
 const INSTRUMENTS = {
-  BOOM500: {
-    symbol:       'BOOM500',
-    deriv:        'BOOM500',
-    name:         'Boom 500',
-    type:         'boom',
-    color:        '#00e5ff',
-    avgInterval:  500,   // average ticks between spikes
-    spikeThresh:  0.5,   // % move that classifies as spike
-    direction:    'UP',  // boom spikes go UP
-    desc:         'Averages 1 upward spike per ~500 ticks',
-  },
-  CRASH1000: {
-    symbol:       'CRASH1000',
-    deriv:        'CRASH1000',
-    name:         'Crash 1000',
-    type:         'crash',
-    color:        '#ff3d71',
-    avgInterval:  1000,
-    spikeThresh:  0.5,
-    direction:    'DOWN',
-    desc:         'Averages 1 downward spike per ~1000 ticks',
-  },
-  CRASH300: {
-    symbol:       'CRASH300',
-    deriv:        'CRASH300',
-    name:         'Crash 300',
-    type:         'crash',
-    color:        '#ff6b35',
-    avgInterval:  300,
-    spikeThresh:  0.5,
-    direction:    'DOWN',
-    desc:         'Averages 1 downward spike per ~300 ticks',
-  },
+  BOOM500:   { name:'Boom 500',   type:'boom',  color:'#00e5ff', avgInterval:500,  spikeThresh:0.4, direction:'UP',   desc:'~1 upward spike per 500 ticks' },
+  CRASH1000: { name:'Crash 1000', type:'crash', color:'#ff3d71', avgInterval:1000, spikeThresh:0.4, direction:'DOWN', desc:'~1 downward spike per 1000 ticks' },
+  CRASH300:  { name:'Crash 300',  type:'crash', color:'#ff6b35', avgInterval:300,  spikeThresh:0.4, direction:'DOWN', desc:'~1 downward spike per 300 ticks' },
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   STATE
-═══════════════════════════════════════════════════════════════ */
-let currentInst   = 'BOOM500'
-let ws            = null
-let ticks         = {}   // symbol -> array of {price, time, isSpike}
-let ticksSinceSpike = {}
-let spikeLog      = {}
-let signal        = {}
-let history       = []
-let allWS         = {}   // one WS per instrument for ticker
+let currentInst = 'BOOM500'
+let ticks       = { BOOM500:[], CRASH1000:[], CRASH300:[] }
+let spikeSince  = { BOOM500:0,  CRASH1000:0,  CRASH300:0  }
+let spikeLog    = { BOOM500:[], CRASH1000:[], CRASH300:[]  }
+let signals     = { BOOM500:null, CRASH1000:null, CRASH300:null }
+let history     = []
+let polling     = false
+let pollFails   = 0
 
-// Init state for each instrument
-Object.keys(INSTRUMENTS).forEach(k => {
-  ticks[k]          = []
-  ticksSinceSpike[k] = 0
-  spikeLog[k]        = []
-  signal[k]          = null
-})
-
-/* ═══════════════════════════════════════════════════════════════
-   DERIV WEBSOCKET
-═══════════════════════════════════════════════════════════════ */
-const DERIV_TOKEN = 'avkdP7c31FHmKHf'
-
-// Symbol map
-let SYMBOL_MAP = {
-  BOOM500:   'BOOM500',
-  CRASH1000: 'CRASH1000',
-  CRASH300:  'CRASH300',
+/* ═══════════════════════════════════════════════════
+   DATA FETCH — via Netlify proxy function
+═══════════════════════════════════════════════════ */
+async function fetchTick(symbol) {
+  const res  = await fetch(`/.netlify/functions/tick?symbol=${symbol}`)
+  const data = await res.json()
+  if (data.error) throw new Error(data.error)
+  return data
 }
 
-// All known Deriv WebSocket endpoints — tries each in order
-const WS_URLS = [
-  'wss://ws.derivws.com/websockets/v3?app_id=32CU4vIdad1kjw93ULFI8',
-  'wss://ws.binaryws.com/websockets/v3?app_id=32CU4vIdad1kjw93ULFI8',
-  'wss://blue.derivws.com/websockets/v3?app_id=32CU4vIdad1kjw93ULFI8',
-  'wss://green.derivws.com/websockets/v3?app_id=32CU4vIdad1kjw93ULFI8',
-]
-let wsUrlIdx = 0
+async function pollAll() {
+  if (polling) return
+  polling = true
+  const symbols = Object.keys(INSTRUMENTS)
+  let anyOk = false
 
-function connectDeriv(symbol, onTick, onError) {
-  const url = WS_URLS[wsUrlIdx % WS_URLS.length]
-
-  // Update loading status
-  const st = document.getElementById('loading-status')
-  if (st) st.textContent = `Trying endpoint ${(wsUrlIdx % WS_URLS.length) + 1} of ${WS_URLS.length}...`
-
-  let ws
-  try {
-    ws = new WebSocket(url)
-  } catch(e) {
-    wsUrlIdx++
-    setTimeout(() => connectDeriv(symbol, onTick, onError), 1000)
-    return
-  }
-
-  let gotResponse = false
-  const timeout = setTimeout(() => {
-    if (!gotResponse) {
-      ws.close()
-      wsUrlIdx++
-      onError(`Endpoint ${wsUrlIdx} timed out, trying next...`)
-      connectDeriv(symbol, onTick, onError)
-    }
-  }, 6000)
-
-  ws.onopen = () => {
-    ws.send(JSON.stringify({ authorize: DERIV_TOKEN }))
-  }
-
-  ws.onmessage = (msg) => {
+  for (const sym of symbols) {
     try {
-      gotResponse = true
-      clearTimeout(timeout)
-      const data = JSON.parse(msg.data)
-
-      if (data.msg_type === 'authorize') {
-        if (data.error) { onError('Auth: ' + data.error.message); return }
-        ws.send(JSON.stringify({ active_symbols: 'brief', product_type: 'basic' }))
-        return
+      const data = await fetchTick(sym)
+      if (data.ok && data.price) {
+        handleTick(sym, parseFloat(data.price), data.time * 1000)
+        anyOk = true
       }
-
-      if (data.msg_type === 'active_symbols') {
-        if (data.error) { onError('Symbols: ' + data.error.message); return }
-        const syms = data.active_symbols || []
-        const available = {}
-        syms.forEach(s => {
-          const n = s.symbol.toUpperCase()
-          if (n.includes('BOOM') || n.includes('CRASH')) available[n] = s.symbol
-        })
-        Object.keys(SYMBOL_MAP).forEach(k => {
-          if (available[k]) SYMBOL_MAP[k] = available[k]
-          else if (available[k + 'N']) SYMBOL_MAP[k] = available[k + 'N']
-        })
-        const actualSymbol = SYMBOL_MAP[symbol] || symbol
-        ws.send(JSON.stringify({ ticks: actualSymbol, subscribe: 1 }))
-        return
-      }
-
-      if (data.msg_type === 'tick') {
-        onTick(data.tick)
-        return
-      }
-
-      if (data.error) onError(`[${data.msg_type}] ${data.error.message}`)
-    } catch(e) {
-      onError('Parse error: ' + e.message)
+    } catch (e) {
+      console.warn(sym, e.message)
+      showLoadErr(sym + ': ' + e.message)
     }
   }
 
-  ws.onerror = () => {
-    clearTimeout(timeout)
-    wsUrlIdx++
-    onError(`WS failed (${url.split('//')[1].split('/')[0]}), trying next...`)
-    setTimeout(() => connectDeriv(symbol, onTick, onError), 1500)
-  }
+  polling = false
 
-  ws.onclose = (e) => {
-    clearTimeout(timeout)
-    if (!gotResponse) {
-      wsUrlIdx++
-      setTimeout(() => connectDeriv(symbol, onTick, onError), 2000)
+  if (anyOk) {
+    pollFails = 0
+    // Show app on first success
+    if (document.getElementById('loading-screen').style.display !== 'none') {
+      document.getElementById('loading-screen').style.display = 'none'
+      document.getElementById('app').style.display = 'block'
+      setConnected(true)
+    }
+  } else {
+    pollFails++
+    if (pollFails >= 5) {
+      document.getElementById('loading-screen').style.display = 'none'
+      document.getElementById('error-screen').style.display  = 'flex'
+      document.getElementById('error-msg').textContent = 'Could not reach Deriv after multiple attempts. Make sure DERIV_TOKEN is set in your Netlify environment variables and try again.'
     }
   }
-  return ws
 }
 
-function connectAll() {
-  Object.keys(INSTRUMENTS).forEach(key => {
-    const inst = INSTRUMENTS[key]
-    allWS[key] = connectDeriv(inst.deriv,
-      (tick) => handleTick(key, tick),
-      (err)  => {
-        console.warn(key, err)
-        // Show errors live on loading screen
-        const el = document.getElementById('loading-errors')
-        if (el) el.textContent = key + ': ' + err
-      }
-    )
-  })
+function setConnected(ok) {
+  document.getElementById('conn-dot').style.background   = ok ? 'var(--bull)' : 'var(--warn)'
+  document.getElementById('conn-label').textContent      = ok ? 'LIVE' : 'RECONNECTING'
+  document.getElementById('conn-label').style.color      = ok ? 'var(--bull)' : 'var(--warn)'
 }
 
-/* ═══════════════════════════════════════════════════════════════
+function showLoadErr(msg) {
+  const el = document.getElementById('loading-errors')
+  if (el) el.textContent = msg
+}
+
+function forceRefresh() { pollAll() }
+
+/* ═══════════════════════════════════════════════════
    TICK HANDLER
-═══════════════════════════════════════════════════════════════ */
-function handleTick(key, tick) {
-  const inst   = INSTRUMENTS[key]
-  const price  = parseFloat(tick.quote)
-  const time   = tick.epoch * 1000
-  const arr    = ticks[key]
+═══════════════════════════════════════════════════ */
+function handleTick(key, price, time) {
+  const inst = INSTRUMENTS[key]
+  const arr  = ticks[key]
 
   // Spike detection
   let isSpike = false
   if (arr.length > 0) {
-    const prev  = arr[arr.length - 1].price
-    const pct   = Math.abs((price - prev) / prev) * 100
+    const prev = arr[arr.length-1].price
+    const pct  = Math.abs((price - prev) / prev) * 100
     if (pct >= inst.spikeThresh) {
       const dir = price > prev ? 'UP' : 'DOWN'
-      // Only classify as spike if in correct direction for instrument
-      if ((inst.type === 'boom' && dir === 'UP') || (inst.type === 'crash' && dir === 'DOWN')) {
+      if ((inst.type==='boom' && dir==='UP') || (inst.type==='crash' && dir==='DOWN')) {
         isSpike = true
-        ticksSinceSpike[key] = 0
-        spikeLog[key].unshift({ price: price.toFixed(5), time: new Date(time).toLocaleTimeString(), dir, pct: pct.toFixed(2), ticksBefore: ticksSinceSpike[key] })
-        spikeLog[key] = spikeLog[key].slice(0, 20)
-        if (key === currentInst) triggerSpikeFlash(inst)
+        spikeLog[key].unshift({ price:price.toFixed(5), time:new Date(time).toLocaleTimeString(), dir, pct:pct.toFixed(2) })
+        spikeLog[key] = spikeLog[key].slice(0,20)
+        spikeSince[key] = 0
+        if (key===currentInst) triggerSpikeFlash(inst)
       }
     }
   }
-
-  if (!isSpike) ticksSinceSpike[key]++
+  if (!isSpike) spikeSince[key]++
 
   arr.push({ price, time, isSpike })
   if (arr.length > 500) arr.shift()
 
-  // Update ticker tape
-  updateTicker(key, price)
-
-  // If this is active instrument, recompute signal and render
-  if (key === currentInst) {
-    signal[key] = computeSignal(key)
-    renderAll()
-    document.getElementById('last-ts').textContent = new Date().toLocaleTimeString()
-  }
-
-  // Show app on first tick
-  if (document.getElementById('loading-screen').style.display !== 'none') {
-    if (arr.length >= 5) {
-      document.getElementById('loading-screen').style.display = 'none'
-      document.getElementById('app').style.display = 'block'
-      document.getElementById('conn-dot').style.background = 'var(--bull)'
-      document.getElementById('conn-label').textContent = 'LIVE'
-      document.getElementById('conn-label').style.color = 'var(--bull)'
-    }
-  }
-}
-
-function updateTicker(key, price) {
-  const map = { BOOM500: ['tk-boom500','tk-boom500b'], CRASH1000: ['tk-crash1000','tk-crash1000b'], CRASH300: ['tk-crash300','tk-crash300b'] }
-  const ids = map[key] || []
-  const inst = INSTRUMENTS[key]
-  ids.forEach(id => {
+  // Update ticker
+  const ids = { BOOM500:['tk-BOOM500','tk-BOOM500b'], CRASH1000:['tk-CRASH1000','tk-CRASH1000b'], CRASH300:['tk-CRASH300','tk-CRASH300b'] }
+  ;(ids[key]||[]).forEach(id => {
     const el = document.getElementById(id)
     if (el) { el.textContent = price.toFixed(5); el.style.color = inst.color }
   })
+
+  if (key===currentInst) {
+    signals[key] = computeSignal(key)
+    renderAll()
+    document.getElementById('last-ts').textContent = new Date().toLocaleTimeString()
+  }
 }
 
-/* ═══════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════
    SIGNAL ENGINE
-═══════════════════════════════════════════════════════════════ */
-
-// EMA
-function ema(arr, period) {
-  const k = 2 / (period + 1)
-  let v = arr[0]
-  for (let i = 1; i < arr.length; i++) v = arr[i] * k + v * (1 - k)
+═══════════════════════════════════════════════════ */
+function ema(arr, p) {
+  const k=2/(p+1); let v=arr[0]
+  for(let i=1;i<arr.length;i++) v=arr[i]*k+v*(1-k)
   return v
 }
 
-// Swing detection
-function swings(prices, lb = 5) {
-  const highs = [], lows = []
-  for (let i = lb; i < prices.length - lb; i++) {
-    const sl = prices.slice(i - lb, i + lb + 1)
-    if (prices[i] === Math.max(...sl)) highs.push({ idx: i, price: prices[i] })
-    if (prices[i] === Math.min(...sl)) lows.push({ idx: i, price: prices[i] })
+function swings(prices, lb=5) {
+  const highs=[],lows=[]
+  for(let i=lb;i<prices.length-lb;i++){
+    const sl=prices.slice(i-lb,i+lb+1)
+    if(prices[i]===Math.max(...sl)) highs.push({idx:i,price:prices[i]})
+    if(prices[i]===Math.min(...sl)) lows.push({idx:i,price:prices[i]})
   }
-  return { highs, lows }
+  return {highs,lows}
 }
 
-// Market structure
 function marketStructure(prices) {
-  const { highs, lows } = swings(prices)
-  if (highs.length < 2 || lows.length < 2) return { trend: 'NEUTRAL', HH: false, HL: false, LH: false, LL: false, bos: false }
-  const lH = highs.slice(-2), lL = lows.slice(-2)
-  const HH = lH[1].price > lH[0].price, HL = lL[1].price > lL[0].price
-  const LH = lH[1].price < lH[0].price, LL = lL[1].price < lL[0].price
-  const trend = HH && HL ? 'BULLISH' : LH && LL ? 'BEARISH' : 'NEUTRAL'
-  const cur   = prices[prices.length - 1]
-  const bos   = trend === 'BULLISH' ? cur > lH[0].price : trend === 'BEARISH' ? cur < lL[0].price : false
-  return { trend, HH, HL, LH, LL, bos }
+  const {highs,lows}=swings(prices)
+  if(highs.length<2||lows.length<2) return {trend:'NEUTRAL',HH:false,HL:false,LH:false,LL:false,bos:false}
+  const lH=highs.slice(-2),lL=lows.slice(-2)
+  const HH=lH[1].price>lH[0].price, HL=lL[1].price>lL[0].price
+  const LH=lH[1].price<lH[0].price, LL=lL[1].price<lL[0].price
+  const trend=HH&&HL?'BULLISH':LH&&LL?'BEARISH':'NEUTRAL'
+  const cur=prices[prices.length-1]
+  const bos=trend==='BULLISH'?cur>lH[0].price:trend==='BEARISH'?cur<lL[0].price:false
+  return {trend,HH,HL,LH,LL,bos}
 }
 
-// Momentum
 function momentum(prices) {
-  const n = prices.length
-  if (n < 20) return { roc: 0, acceleration: 0, overextended: false }
-  const roc = ((prices[n - 1] - prices[n - 20]) / prices[n - 20]) * 100
-  const roc2 = ((prices[n - 10] - prices[n - 20]) / prices[n - 20]) * 100
-  const acceleration = roc - roc2
-  const ema20 = ema(prices.slice(-20), 20)
-  const dev   = ((prices[n - 1] - ema20) / ema20) * 100
-  return { roc: +roc.toFixed(3), acceleration: +acceleration.toFixed(3), overextended: Math.abs(dev) > 0.3, dev: +dev.toFixed(3) }
+  const n=prices.length
+  if(n<20) return {roc:0,acceleration:0,overextended:false,dev:0}
+  const roc=((prices[n-1]-prices[n-20])/prices[n-20])*100
+  const roc2=((prices[n-10]-prices[n-20])/prices[n-20])*100
+  const ema20=ema(prices.slice(-20),20)
+  const dev=((prices[n-1]-ema20)/ema20)*100
+  return {roc:+roc.toFixed(3),acceleration:+(roc-roc2).toFixed(3),overextended:Math.abs(dev)>0.3,dev:+dev.toFixed(3)}
 }
 
-// Consecutive candle direction
-function consecutiveDir(prices, n = 5) {
-  if (prices.length < n + 1) return { count: 0, dir: 'NONE' }
-  let count = 0
-  const dir = prices[prices.length - 1] > prices[prices.length - 2] ? 'UP' : 'DOWN'
-  for (let i = prices.length - 1; i > prices.length - n - 1; i--) {
-    if (i <= 0) break
-    const d = prices[i] > prices[i - 1] ? 'UP' : 'DOWN'
-    if (d === dir) count++; else break
+function consecutiveDir(prices,n=5) {
+  if(prices.length<n+1) return {count:0,dir:'NONE'}
+  const dir=prices[prices.length-1]>prices[prices.length-2]?'UP':'DOWN'
+  let count=0
+  for(let i=prices.length-1;i>prices.length-n-1&&i>0;i--){
+    if((prices[i]>prices[i-1]?'UP':'DOWN')===dir) count++; else break
   }
-  return { count, dir }
+  return {count,dir}
 }
 
-// Post-spike setup quality
-function postSpikeSetup(key) {
-  const inst  = INSTRUMENTS[key]
-  const arr   = ticks[key]
-  const spLog = spikeLog[key]
-  if (!spLog.length || arr.length < 10) return null
-
-  const prices     = arr.map(t => t.price)
-  const lastSpike  = arr.slice().reverse().findIndex(t => t.isSpike)
-  if (lastSpike < 0) return null
-
-  const priceAtSpike  = arr[arr.length - 1 - lastSpike].price
-  const currentPrice  = prices[prices.length - 1]
-  const ticksAgo      = lastSpike
-  const retracement   = ((currentPrice - priceAtSpike) / priceAtSpike) * 100
-
-  // For crash: after spike DOWN, we look for long entry
-  // For boom: after spike UP, we look for short entry back to mean
-  const isBoom  = inst.type === 'boom'
-  // Best entry is when price has partially retraced back toward spike origin
-  const retraceFavourable = isBoom
-    ? retracement < -0.05 && retracement > -0.5    // boom: price came back down a little after up spike
-    : retracement >  0.05 && retracement <  0.5    // crash: price bounced up a little after down spike
-
-  const quality = ticksAgo < 50 && retraceFavourable ? 'PRIME'
-                : ticksAgo < 100 ? 'GOOD'
-                : ticksAgo < 200 ? 'FAIR'
-                : 'STALE'
-
-  return { ticksAgo, priceAtSpike: +priceAtSpike.toFixed(5), retracement: +retracement.toFixed(4), quality, retraceFavourable }
-}
-
-// Spike probability
 function spikeProbability(key) {
-  const inst  = INSTRUMENTS[key]
-  const since = ticksSinceSpike[key]
-  const avg   = inst.avgInterval
-  // Exponential probability: P(spike by tick n) = 1 - (1 - 1/avg)^n
-  const raw   = 1 - Math.pow(1 - 1 / avg, since)
-  const pct   = Math.min(99, Math.round(raw * 100))
-  const zone  = pct >= 80 ? 'HOT' : pct >= 50 ? 'WARM' : pct >= 25 ? 'BUILDING' : 'EARLY'
-  const zoneColor = pct >= 80 ? '#ffe600' : pct >= 50 ? '#ffaa00' : pct >= 25 ? '#00e5ff' : '#2a4060'
-  return { pct, zone, zoneColor, since, avg }
+  const inst=INSTRUMENTS[key], since=spikeSince[key], avg=inst.avgInterval
+  const raw=1-Math.pow(1-1/avg,since)
+  const pct=Math.min(99,Math.round(raw*100))
+  const zone=pct>=80?'HOT':pct>=50?'WARM':pct>=25?'BUILDING':'EARLY'
+  const zc=pct>=80?'#ffe600':pct>=50?'#ffaa00':pct>=25?'#00e5ff':'#2a4060'
+  return {pct,zone,zoneColor:zc,since,avg}
 }
 
-// ATR equivalent (tick range)
-function tickATR(prices, period = 14) {
-  if (prices.length < period + 1) return 0.001
-  const ranges = []
-  for (let i = prices.length - period; i < prices.length; i++) {
-    ranges.push(Math.abs(prices[i] - prices[i - 1]))
-  }
-  return ranges.reduce((s, v) => s + v, 0) / period
+function tickATR(prices,period=14) {
+  if(prices.length<period+1) return 0.001
+  const ranges=[]
+  for(let i=prices.length-period;i<prices.length;i++) ranges.push(Math.abs(prices[i]-prices[i-1]))
+  return ranges.reduce((s,v)=>s+v,0)/period
 }
 
-// Full signal computation
+function postSpikeSetup(key) {
+  const inst=INSTRUMENTS[key], arr=ticks[key], spLog=spikeLog[key]
+  if(!spLog.length||arr.length<10) return null
+  const lastSpike=arr.slice().reverse().findIndex(t=>t.isSpike)
+  if(lastSpike<0) return null
+  const priceAtSpike=arr[arr.length-1-lastSpike].price
+  const cur=arr[arr.length-1].price
+  const retracement=((cur-priceAtSpike)/priceAtSpike)*100
+  const isBoom=inst.type==='boom'
+  const retraceFav=isBoom?(retracement<-0.05&&retracement>-0.5):(retracement>0.05&&retracement<0.5)
+  const quality=lastSpike<50&&retraceFav?'PRIME':lastSpike<100?'GOOD':lastSpike<200?'FAIR':'STALE'
+  return {ticksAgo:lastSpike,priceAtSpike:+priceAtSpike.toFixed(5),retracement:+retracement.toFixed(4),quality,retraceFav}
+}
+
 function computeSignal(key) {
-  const inst   = INSTRUMENTS[key]
-  const arr    = ticks[key]
-  if (arr.length < 30) return null
+  const inst=INSTRUMENTS[key], arr=ticks[key]
+  if(arr.length<30) return null
+  const prices=arr.map(t=>t.price)
+  const ms=marketStructure(prices), mom=momentum(prices), cons=consecutiveDir(prices)
+  const spProb=spikeProbability(key), psSetup=postSpikeSetup(key)
+  const atr=tickATR(prices), cur=prices[prices.length-1]
+  const ema20v=ema(prices.slice(-50),20), ema50v=ema(prices.slice(-100),50)
 
-  const prices = arr.map(t => t.price)
-  const ms     = marketStructure(prices)
-  const mom    = momentum(prices)
-  const cons   = consecutiveDir(prices)
-  const spProb = spikeProbability(key)
-  const psSetup = postSpikeSetup(key)
-  const atr    = tickATR(prices)
-  const cur    = prices[prices.length - 1]
-  const ema20v = ema(prices.slice(-50), 20)
-  const ema50v = ema(prices.slice(-100), 50)
+  let score=0; const conf=[]
 
-  let score = 0
-  const confluences = []
+  if(ms.trend==='BULLISH'){score+=3;conf.push({text:'Bullish market structure (HH+HL)',bull:true})}
+  if(ms.trend==='BEARISH'){score-=3;conf.push({text:'Bearish market structure (LH+LL)',bull:false})}
+  if(ms.bos&&ms.trend==='BULLISH'){score+=2;conf.push({text:'Bullish Break of Structure',bull:true})}
+  if(ms.bos&&ms.trend==='BEARISH'){score-=2;conf.push({text:'Bearish Break of Structure',bull:false})}
+  if(cur>ema20v&&ema20v>ema50v){score+=2;conf.push({text:`Price > EMA20 > EMA50`,bull:true})}
+  if(cur<ema20v&&ema20v<ema50v){score-=2;conf.push({text:`Price < EMA20 < EMA50`,bull:false})}
+  if(mom.roc>0.05){score+=1;conf.push({text:`Positive ROC (${mom.roc}%)`,bull:true})}
+  if(mom.roc<-0.05){score-=1;conf.push({text:`Negative ROC (${mom.roc}%)`,bull:false})}
+  if(mom.overextended) conf.push({text:`Overextended from EMA (${mom.dev}%)`,bull:null})
+  if(cons.count>=4&&cons.dir==='UP'){score+=1.5;conf.push({text:`${cons.count} consecutive up ticks`,bull:true})}
+  if(cons.count>=4&&cons.dir==='DOWN'){score-=1.5;conf.push({text:`${cons.count} consecutive down ticks`,bull:false})}
 
-  // 1. Market structure
-  if (ms.trend === 'BULLISH') { score += 3; confluences.push({ text: 'Bullish market structure (HH+HL)', bull: true }) }
-  if (ms.trend === 'BEARISH') { score -= 3; confluences.push({ text: 'Bearish market structure (LH+LL)', bull: false }) }
-  if (ms.bos && ms.trend === 'BULLISH') { score += 2; confluences.push({ text: 'Bullish Break of Structure', bull: true }) }
-  if (ms.bos && ms.trend === 'BEARISH') { score -= 2; confluences.push({ text: 'Bearish Break of Structure', bull: false }) }
+  const spBull=inst.type==='boom'
+  if(spProb.zone==='HOT'){score+=spBull?3:-3;conf.push({text:`Spike zone HOT (${spProb.pct}%) — ${inst.type==='boom'?'upward':'downward'} spike imminent`,bull:spBull})}
+  else if(spProb.zone==='WARM'){score+=spBull?1.5:-1.5;conf.push({text:`Spike zone WARM (${spProb.pct}%)`,bull:spBull})}
 
-  // 2. EMA alignment
-  if (cur > ema20v && ema20v > ema50v) { score += 2; confluences.push({ text: `Price > EMA20 > EMA50 (uptrend)`, bull: true }) }
-  if (cur < ema20v && ema20v < ema50v) { score -= 2; confluences.push({ text: `Price < EMA20 < EMA50 (downtrend)`, bull: false }) }
-
-  // 3. Momentum
-  if (mom.roc > 0.05)  { score += 1; confluences.push({ text: `Positive ROC momentum (${mom.roc}%)`, bull: true }) }
-  if (mom.roc < -0.05) { score -= 1; confluences.push({ text: `Negative ROC momentum (${mom.roc}%)`, bull: false }) }
-  if (mom.overextended) confluences.push({ text: `Price overextended from EMA (${mom.dev}%) — possible reversal`, bull: null })
-
-  // 4. Consecutive direction
-  if (cons.count >= 4 && cons.dir === 'UP')   { score += 1.5; confluences.push({ text: `${cons.count} consecutive up ticks — strong buying`, bull: true }) }
-  if (cons.count >= 4 && cons.dir === 'DOWN') { score -= 1.5; confluences.push({ text: `${cons.count} consecutive down ticks — strong selling`, bull: false }) }
-
-  // 5. Spike probability — high probability means NEXT spike imminent
-  if (spProb.zone === 'HOT') {
-    // For boom: expect UP spike = bullish signal; for crash: expect DOWN spike = bearish
-    const spBull = inst.type === 'boom'
-    score += spBull ? 3 : -3
-    confluences.push({ text: `Spike zone HOT (${spProb.pct}% probability) — ${inst.type === 'boom' ? 'upward' : 'downward'} spike imminent`, bull: spBull })
-  } else if (spProb.zone === 'WARM') {
-    const spBull = inst.type === 'boom'
-    score += spBull ? 1.5 : -1.5
-    confluences.push({ text: `Spike zone WARM (${spProb.pct}% probability) — building toward spike`, bull: spBull })
+  if(psSetup){
+    const psBull=inst.type==='crash'
+    if(psSetup.quality==='PRIME'){score+=psBull?2.5:-2.5;conf.push({text:`PRIME post-spike setup (${Math.abs(psSetup.retracement).toFixed(3)}% retracement)`,bull:psBull})}
+    else if(psSetup.quality==='GOOD'){score+=psBull?1.5:-1.5;conf.push({text:`GOOD post-spike setup (${psSetup.ticksAgo} ticks ago)`,bull:psBull})}
   }
 
-  // 6. Post-spike setup
-  if (psSetup && psSetup.quality === 'PRIME') {
-    // After crash spike DOWN: mean reversion = bullish; after boom spike UP: mean reversion = bearish
-    const psBull = inst.type === 'crash'
-    score += psBull ? 2.5 : -2.5
-    confluences.push({ text: `PRIME post-spike entry — price retracing ${Math.abs(psSetup.retracement).toFixed(3)}% from spike`, bull: psBull })
-  }
-  if (psSetup && psSetup.quality === 'GOOD') {
-    const psBull = inst.type === 'crash'
-    score += psBull ? 1.5 : -1.5
-    confluences.push({ text: `GOOD post-spike setup (${psSetup.ticksAgo} ticks ago)`, bull: psBull })
-  }
-
-  const confidence = Math.min(97, Math.round((Math.abs(score) / 14) * 100))
-  const direction  = score >= 3 ? (inst.type === 'boom' ? 'LONG' : 'LONG')
-                   : score <= -3 ? (inst.type === 'crash' ? 'SHORT' : 'SHORT')
-                   : 'WAIT'
-  // Contextual direction naming for boom/crash
-  const dirLabel   = score >= 3 ? 'BUY' : score <= -3 ? 'SELL' : 'WAIT'
-  const color      = dirLabel === 'BUY' ? '#00d68f' : dirLabel === 'SELL' ? '#ff4d6d' : '#ffaa00'
-
-  const sl  = dirLabel === 'BUY'  ? +(cur - atr * 8).toFixed(5)  : +(cur + atr * 8).toFixed(5)
-  const tp1 = dirLabel === 'BUY'  ? +(cur + atr * 10).toFixed(5) : +(cur - atr * 10).toFixed(5)
-  const tp2 = dirLabel === 'BUY'  ? +(cur + atr * 20).toFixed(5) : +(cur - atr * 20).toFixed(5)
-  const tp3 = dirLabel === 'BUY'  ? +(cur + atr * 35).toFixed(5) : +(cur - atr * 35).toFixed(5)
-  const rr  = +((Math.abs(tp2 - cur)) / (Math.abs(sl - cur) || 0.0001)).toFixed(1)
-
-  return { dirLabel, color, score: +score.toFixed(1), confidence, current: cur, sl, tp1, tp2, tp3, rr, atr: +atr.toFixed(6), confluences, ms, mom, cons, spProb, psSetup, ema20: +ema20v.toFixed(5), ema50: +ema50v.toFixed(5) }
+  const confidence=Math.min(97,Math.round((Math.abs(score)/14)*100))
+  const dirLabel=score>=3?'BUY':score<=-3?'SELL':'WAIT'
+  const color=dirLabel==='BUY'?'#00d68f':dirLabel==='SELL'?'#ff4d6d':'#ffaa00'
+  const sl=dirLabel==='BUY'?+(cur-atr*8).toFixed(5):+(cur+atr*8).toFixed(5)
+  const tp1=dirLabel==='BUY'?+(cur+atr*10).toFixed(5):+(cur-atr*10).toFixed(5)
+  const tp2=dirLabel==='BUY'?+(cur+atr*20).toFixed(5):+(cur-atr*20).toFixed(5)
+  const tp3=dirLabel==='BUY'?+(cur+atr*35).toFixed(5):+(cur-atr*35).toFixed(5)
+  const rr=+((Math.abs(tp2-cur))/(Math.abs(sl-cur)||0.0001)).toFixed(1)
+  return {dirLabel,color,score:+score.toFixed(1),confidence,current:cur,sl,tp1,tp2,tp3,rr,atr:+atr.toFixed(6),confluences:conf,ms,mom,cons,spProb,psSetup,ema20:+ema20v.toFixed(5),ema50:+ema50v.toFixed(5)}
 }
 
-/* ═══════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════
    SPIKE FLASH
-═══════════════════════════════════════════════════════════════ */
+═══════════════════════════════════════════════════ */
 function triggerSpikeFlash(inst) {
-  const overlay = document.getElementById('spike-overlay')
-  const isBoom  = inst.type === 'boom'
-  overlay.style.background = isBoom ? 'rgba(0,229,255,.12)' : 'rgba(255,61,113,.12)'
-  overlay.style.display    = 'block'
-  overlay.style.animation  = 'none'
-  void overlay.offsetWidth
-  overlay.style.animation  = 'spike-flash .8s ease forwards'
-  setTimeout(() => { overlay.style.display = 'none' }, 800)
-
-  // Flash tick counter
-  const tc = document.getElementById('tick-count')
-  tc.classList.remove('count-anim')
-  void tc.offsetWidth
-  tc.classList.add('count-anim')
+  const overlay=document.getElementById('spike-overlay')
+  overlay.style.background=inst.type==='boom'?'rgba(0,229,255,.12)':'rgba(255,61,113,.12)'
+  overlay.style.display='block'
+  overlay.style.animation='none'; void overlay.offsetWidth
+  overlay.style.animation='spike-flash .8s ease forwards'
+  setTimeout(()=>overlay.style.display='none',800)
 }
 
-/* ═══════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════
    CANVAS CHART
-═══════════════════════════════════════════════════════════════ */
+═══════════════════════════════════════════════════ */
 function drawChart() {
-  const canvas = document.getElementById('chart-canvas')
-  if (!canvas) return
-  const inst = INSTRUMENTS[currentInst]
-  const arr  = ticks[currentInst]
-  if (arr.length < 5) return
-
-  const dpr  = window.devicePixelRatio || 1
-  const rect = canvas.getBoundingClientRect()
-  canvas.width  = rect.width * dpr
-  canvas.height = rect.height * dpr
-  const ctx = canvas.getContext('2d')
-  ctx.scale(dpr, dpr)
-  const W = rect.width, H = rect.height
-
-  const slice = arr.slice(-200)
-  const prices = slice.map(t => t.price)
-  const min = Math.min(...prices), max = Math.max(...prices)
-  const range = max - min || 0.001
-  const py = v => H - 12 - ((v - min) / range) * (H - 24)
-  const px = i => 10 + (i / (slice.length - 1)) * (W - 20)
-
-  ctx.clearRect(0, 0, W, H)
-
+  const canvas=document.getElementById('chart')
+  if(!canvas) return
+  const inst=INSTRUMENTS[currentInst], arr=ticks[currentInst]
+  if(arr.length<5) return
+  const dpr=window.devicePixelRatio||1, rect=canvas.getBoundingClientRect()
+  canvas.width=rect.width*dpr; canvas.height=rect.height*dpr
+  const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr)
+  const W=rect.width,H=rect.height
+  const slice=arr.slice(-200), prices=slice.map(t=>t.price)
+  const mn=Math.min(...prices),mx=Math.max(...prices),range=mx-mn||0.001
+  const py=v=>H-12-((v-mn)/range)*(H-24)
+  const px=i=>10+(i/(slice.length-1))*(W-20)
+  ctx.clearRect(0,0,W,H)
   // Grid
-  ctx.strokeStyle = 'rgba(255,255,255,.03)'
-  ctx.lineWidth = 1
-  for (let i = 0; i <= 4; i++) {
-    const y = 12 + (i / 4) * (H - 24)
-    ctx.beginPath(); ctx.moveTo(10, y); ctx.lineTo(W - 10, y); ctx.stroke()
-  }
-
-  // EMA line
-  const emaVals = []
-  let ev = prices[0]
-  const k = 2 / 51
-  prices.forEach(p => { ev = p * k + ev * (1 - k); emaVals.push(ev) })
-  ctx.beginPath(); ctx.strokeStyle = 'rgba(255,255,255,.15)'; ctx.lineWidth = 1; ctx.setLineDash([3, 3])
-  emaVals.forEach((v, i) => i === 0 ? ctx.moveTo(px(i), py(v)) : ctx.lineTo(px(i), py(v)))
-  ctx.stroke(); ctx.setLineDash([])
-
-  // Price line — colour by direction
-  let segStart = 0
-  for (let i = 1; i < slice.length; i++) {
-    const bull = slice[i].price >= slice[i - 1].price
-    const nextBull = i + 1 < slice.length ? slice[i + 1].price >= slice[i].price : bull
-    if (nextBull !== bull || i === slice.length - 1) {
-      ctx.beginPath()
-      ctx.strokeStyle = bull ? 'rgba(0,214,143,.8)' : 'rgba(255,77,109,.8)'
-      ctx.lineWidth = 1.5; ctx.lineJoin = 'round'
-      for (let j = segStart; j <= i; j++) {
-        j === segStart ? ctx.moveTo(px(j), py(slice[j].price)) : ctx.lineTo(px(j), py(slice[j].price))
-      }
-      ctx.stroke()
-      segStart = i
+  ctx.strokeStyle='rgba(255,255,255,.03)'; ctx.lineWidth=1
+  for(let i=0;i<=4;i++){const y=12+(i/4)*(H-24);ctx.beginPath();ctx.moveTo(10,y);ctx.lineTo(W-10,y);ctx.stroke()}
+  // EMA
+  const ev=[];let e=prices[0];const k=2/51
+  prices.forEach(p=>{e=p*k+e*(1-k);ev.push(e)})
+  ctx.beginPath();ctx.strokeStyle='rgba(255,255,255,.15)';ctx.lineWidth=1;ctx.setLineDash([3,3])
+  ev.forEach((v,i)=>i===0?ctx.moveTo(px(i),py(v)):ctx.lineTo(px(i),py(v)))
+  ctx.stroke();ctx.setLineDash([])
+  // Price line
+  let seg=0
+  for(let i=1;i<slice.length;i++){
+    const bull=slice[i].price>=slice[i-1].price
+    const nextBull=i+1<slice.length?slice[i+1].price>=slice[i].price:bull
+    if(nextBull!==bull||i===slice.length-1){
+      ctx.beginPath();ctx.strokeStyle=bull?'rgba(0,214,143,.8)':'rgba(255,77,109,.8)';ctx.lineWidth=1.5;ctx.lineJoin='round'
+      for(let j=seg;j<=i;j++) j===seg?ctx.moveTo(px(j),py(slice[j].price)):ctx.lineTo(px(j),py(slice[j].price))
+      ctx.stroke();seg=i
     }
   }
-
   // Spike markers
-  slice.forEach((t, i) => {
-    if (!t.isSpike) return
-    const x = px(i), y = py(t.price)
-    const isBoom = INSTRUMENTS[currentInst].type === 'boom'
-    // Lightning bolt line
-    ctx.strokeStyle = '#ffe600'; ctx.lineWidth = 2
-    ctx.beginPath(); ctx.moveTo(x, isBoom ? y + 16 : y - 16); ctx.lineTo(x, isBoom ? y - 4 : y + 4); ctx.stroke()
-    // Dot
-    ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2)
-    ctx.fillStyle = '#ffe600'; ctx.fill()
-    // Label
-    ctx.fillStyle = '#ffe600'; ctx.font = `bold ${10 * dpr / dpr}px Share Tech Mono`
-    ctx.fillText('⚡', x - 5, isBoom ? y + 28 : y - 8)
+  slice.forEach((t,i)=>{
+    if(!t.isSpike) return
+    const x=px(i),y=py(t.price),isBoom=inst.type==='boom'
+    ctx.strokeStyle='#ffe600';ctx.lineWidth=2
+    ctx.beginPath();ctx.moveTo(x,isBoom?y+16:y-16);ctx.lineTo(x,isBoom?y-4:y+4);ctx.stroke()
+    ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle='#ffe600';ctx.fill()
+    ctx.fillStyle='#ffe600';ctx.font=`10px Share Tech Mono`;ctx.fillText('⚡',x-5,isBoom?y+28:y-8)
   })
-
   // Current price dot
-  const last = slice[slice.length - 1]
-  ctx.beginPath(); ctx.arc(px(slice.length - 1), py(last.price), 4, 0, Math.PI * 2)
-  ctx.fillStyle = inst.color; ctx.fill()
-
-  // Price dashed line
-  ctx.strokeStyle = `${inst.color}50`; ctx.lineWidth = 1; ctx.setLineDash([4, 4])
-  ctx.beginPath(); ctx.moveTo(10, py(last.price)); ctx.lineTo(W - 10, py(last.price)); ctx.stroke()
-  ctx.setLineDash([])
+  const last=slice[slice.length-1]
+  ctx.beginPath();ctx.arc(px(slice.length-1),py(last.price),4,0,Math.PI*2);ctx.fillStyle=inst.color;ctx.fill()
+  ctx.strokeStyle=inst.color+'50';ctx.lineWidth=1;ctx.setLineDash([4,4])
+  ctx.beginPath();ctx.moveTo(10,py(last.price));ctx.lineTo(W-10,py(last.price));ctx.stroke();ctx.setLineDash([])
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   RENDER FUNCTIONS
-═══════════════════════════════════════════════════════════════ */
-function renderHero(sig) {
-  const inst = INSTRUMENTS[currentInst]
-  const c    = sig.color
-  const hero = document.getElementById('hero')
-  hero.style.borderColor = `${c}40`
-  hero.style.background  = `linear-gradient(135deg,${c}06 0%,#04080f 70%)`
-  ;['corner-tl','corner-tr','corner-bl','corner-br'].forEach(id => {
-    document.getElementById(id).style.borderColor = c
-  })
-
-  const dir = document.getElementById('sig-dir')
-  dir.textContent   = sig.dirLabel
-  dir.style.color   = c
-  dir.style.textShadow = `0 0 30px ${c}80`
-
-  document.getElementById('sig-score').textContent = `${sig.score > 0 ? '+' : ''}${sig.score}`
-  document.getElementById('sig-score').style.color = c
-  document.getElementById('sig-conf').textContent  = `${sig.confidence}%`
-  document.getElementById('sig-conf').style.color  = c
-  document.getElementById('sig-price').textContent = sig.current.toFixed(5)
-
-  const spProb = sig.spProb
-  document.getElementById('tick-count').textContent   = ticksSinceSpike[currentInst]
-  document.getElementById('tick-count').style.color   = spProb.zoneColor
-  document.getElementById('tick-label').textContent   = `Zone: ${spProb.zone}`
-  document.getElementById('tick-label').style.color   = spProb.zoneColor
-  const barW = Math.min(100, (ticksSinceSpike[currentInst] / INSTRUMENTS[currentInst].avgInterval) * 100)
-  document.getElementById('tick-bar').style.width       = `${barW}%`
-  document.getElementById('tick-bar').style.background  = spProb.zoneColor
-  document.getElementById('avg-spike-interval').textContent = `Avg interval: ~${INSTRUMENTS[currentInst].avgInterval} ticks`
-  document.getElementById('spike-prob').textContent    = `${spProb.pct}%`
-  document.getElementById('spike-prob').style.color    = spProb.zoneColor
-  document.getElementById('spike-zone-label').textContent = spProb.zone
-  document.getElementById('spike-zone-label').style.color = spProb.zoneColor
-
+/* ═══════════════════════════════════════════════════
+   RENDER
+═══════════════════════════════════════════════════ */
+function renderAll() {
+  const sig=signals[currentInst]; if(!sig) return
+  const inst=INSTRUMENTS[currentInst], c=sig.color
+  // Hero corners
+  document.getElementById('hero').style.borderColor=c+'40'
+  document.getElementById('hero').style.background=`linear-gradient(135deg,${c}06,#04080f 70%)`
+  ;['c-tl','c-tr','c-bl','c-br'].forEach(id=>document.getElementById(id).style.borderColor=c)
+  // Signal
+  const dir=document.getElementById('sig-dir')
+  dir.textContent=sig.dirLabel;dir.style.color=c;dir.style.textShadow=`0 0 30px ${c}80`
+  document.getElementById('sig-score').textContent=(sig.score>0?'+':'')+sig.score; document.getElementById('sig-score').style.color=c
+  document.getElementById('sig-conf').textContent=sig.confidence+'%'; document.getElementById('sig-conf').style.color=c
+  document.getElementById('sig-price').textContent=sig.current.toFixed(5)
   // Levels
-  const lv = [
-    { l: 'STOP LOSS', v: sig.sl,  c: '#ff4d6d' },
-    { l: 'TP 1',      v: sig.tp1, c: '#00d68f' },
-    { l: 'TP 2',      v: sig.tp2, c: '#00d68f' },
-    { l: 'TP 3',      v: sig.tp3, c: '#00e5ff' },
-  ]
-  document.getElementById('levels-row').innerHTML = lv.map(l => `
-    <div class="level-box" style="border-color:${l.c}25">
-      <div style="font-size:8px;letter-spacing:2px;color:var(--muted);margin-bottom:2px">${l.l}</div>
-      <div style="font-family:'Rajdhani',sans-serif;font-size:15px;color:${l.c};font-weight:600">${l.v}</div>
-    </div>`).join('')
-
-  document.getElementById('chart-subtitle').textContent = `${INSTRUMENTS[currentInst].name} · ATR ${sig.atr}`
-}
-
-function renderInstInfo() {
-  const inst = INSTRUMENTS[currentInst]
-  document.getElementById('inst-info-card').innerHTML = `
-    <div class="card-label">${inst.name.toUpperCase()} — INFO</div>
-    <div style="font-size:11px;color:${inst.color};font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;margin-bottom:8px">${inst.name}</div>
-    <div style="font-size:10px;color:var(--text);line-height:1.7;margin-bottom:10px">${inst.desc}</div>
-    <div style="display:flex;flex-direction:column;gap:4px">
-      ${[
-        ['Spike direction', inst.direction === 'UP' ? '▲ Upward (Boom)' : '▼ Downward (Crash)', inst.color],
-        ['Avg interval', `~${inst.avgInterval} ticks`, 'var(--text)'],
-        ['Spike threshold', `${inst.spikeThresh}% move`, 'var(--text)'],
-        ['Best entry', inst.type === 'boom' ? 'Post-spike pullback' : 'Post-spike bounce', 'var(--warn)'],
-      ].map(r => `<div style="display:flex;justify-content:space-between;padding:4px 8px;background:var(--bg3);border-radius:4px">
-        <span style="font-size:9px;color:var(--muted)">${r[0]}</span>
-        <span style="font-size:9px;color:${r[2]};font-weight:700">${r[1]}</span>
-      </div>`).join('')}
-    </div>`
+  document.getElementById('levels-row').innerHTML=[
+    {l:'STOP LOSS',v:sig.sl,c:'#ff4d6d'},{l:'TP 1',v:sig.tp1,c:'#00d68f'},{l:'TP 2',v:sig.tp2,c:'#00d68f'},{l:'TP 3',v:sig.tp3,c:'#00e5ff'}
+  ].map(lv=>`<div class="level-box" style="border-color:${lv.c}25"><div style="font-size:8px;letter-spacing:2px;color:var(--muted);margin-bottom:2px">${lv.l}</div><div style="font-family:'Rajdhani',sans-serif;font-size:15px;color:${lv.c};font-weight:600">${lv.v}</div></div>`).join('')
+  // Tick counter
+  const sp=sig.spProb
+  document.getElementById('tick-count').textContent=spikeSince[currentInst]; document.getElementById('tick-count').style.color=sp.zoneColor
+  document.getElementById('tick-label').textContent='Zone: '+sp.zone; document.getElementById('tick-label').style.color=sp.zoneColor
+  const bw=Math.min(100,(spikeSince[currentInst]/inst.avgInterval)*100)
+  document.getElementById('tick-bar').style.width=bw+'%'; document.getElementById('tick-bar').style.background=sp.zoneColor
+  document.getElementById('spike-prob-val').textContent=sp.pct+'%'; document.getElementById('spike-prob-val').style.color=sp.zoneColor
+  document.getElementById('spike-zone-label').textContent=sp.zone; document.getElementById('spike-zone-label').style.color=sp.zoneColor
+  document.getElementById('avg-interval-label').textContent=`Avg: ~${inst.avgInterval} ticks`
+  document.getElementById('chart-sub').textContent=`${inst.name} · ATR ${sig.atr}`
+  // Inst info
+  document.getElementById('inst-info-card').innerHTML=`<div class="card-label">${inst.name.toUpperCase()} — INFO</div><div style="font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;color:${inst.color};margin-bottom:8px">${inst.name}</div><div style="font-size:10px;color:var(--text);line-height:1.7;margin-bottom:10px">${inst.desc}</div>${[['Spike direction',inst.direction==='UP'?'▲ Upward':'▼ Downward',inst.color],['Avg interval','~'+inst.avgInterval+' ticks','var(--text)'],['Best entry',inst.type==='boom'?'Post-spike pullback':'Post-spike bounce','var(--warn)']].map(r=>`<div style="display:flex;justify-content:space-between;padding:4px 8px;background:var(--bg3);border-radius:4px;margin-bottom:3px"><span style="font-size:9px;color:var(--muted)">${r[0]}</span><span style="font-size:9px;color:${r[2]};font-weight:700">${r[1]}</span></div>`).join('')}`
+  // Panels
+  renderStructure(sig); renderSpike(sig); renderEntry(sig); renderMomentum(sig); renderConfluences(sig)
+  // Spike log
+  const sl=spikeLog[currentInst]
+  document.getElementById('spike-log').innerHTML=sl.length?sl.slice(0,10).map((s,i)=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--dim);opacity:${1-i*.08}"><span style="font-size:10px;color:var(--spike)">⚡ ${s.dir}</span><span style="font-size:9px;color:var(--text)">${s.price}</span><span style="font-size:9px;color:var(--muted)">${s.time}</span></div>`).join(''):'<div style="font-size:10px;color:var(--muted);text-align:center;padding:8px">No spikes detected yet</div>'
+  // Patterns
+  const pts=[]
+  if(sig.cons.count>=5&&sig.cons.dir==='UP') pts.push({n:`${sig.cons.count}-tick bullish run`,b:true})
+  if(sig.cons.count>=5&&sig.cons.dir==='DOWN') pts.push({n:`${sig.cons.count}-tick bearish run`,b:false})
+  if(sig.mom.overextended&&sig.mom.roc>0) pts.push({n:'Overextended up — mean reversion watch',b:null})
+  if(sig.mom.overextended&&sig.mom.roc<0) pts.push({n:'Overextended down — mean reversion watch',b:null})
+  if(sig.ms.bos&&sig.ms.trend==='BULLISH') pts.push({n:'Bullish BOS — continuation signal',b:true})
+  if(sig.ms.bos&&sig.ms.trend==='BEARISH') pts.push({n:'Bearish BOS — continuation signal',b:false})
+  document.getElementById('patterns-body').innerHTML=pts.length?pts.map(p=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--bg3);border-radius:4px;margin-bottom:3px"><span>${p.b===true?'🟢':p.b===false?'🔴':'🟡'}</span><span style="font-size:10px;color:${p.b?'#00d68f':p.b===false?'#ff4d6d':'#ffaa00'}">${p.n}</span></div>`).join(''):'<div style="font-size:9px;color:var(--muted)">No major patterns currently</div>'
+  // History
+  history.unshift({dir:sig.dirLabel,sym:inst.name,time:new Date().toLocaleTimeString()})
+  history=history.slice(0,20)
+  document.getElementById('history-body').innerHTML=history.map((h,i)=>{const c=h.dir==='BUY'?'#00d68f':h.dir==='SELL'?'#ff4d6d':'#ffaa00';return `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--dim);opacity:${1-i*.07}"><span style="font-size:10px;color:${c};font-weight:700">${h.dir}</span><span style="font-size:9px;color:var(--muted)">${h.sym}</span><span style="font-size:9px;color:var(--dim)">${h.time}</span></div>`}).join('')
+  drawChart()
 }
 
 function renderStructure(sig) {
-  const ms   = sig.ms
-  const inst = INSTRUMENTS[currentInst]
-  const tc   = ms.trend === 'BULLISH' ? 'var(--bull)' : ms.trend === 'BEARISH' ? 'var(--bear)' : 'var(--muted)'
-  const badge = (txt, c) => `<span style="font-size:8px;color:${c};background:${c}18;padding:1px 5px;border-radius:3px;margin-left:3px">${txt}</span>`
-
-  document.getElementById('panel-structure').innerHTML = `
-    <div class="card-label">MARKET STRUCTURE ANALYSIS</div>
-    <div style="margin-bottom:12px">
-      <div style="font-size:9px;color:var(--muted);margin-bottom:6px">TREND</div>
-      <div style="font-family:'Rajdhani',sans-serif;font-size:32px;font-weight:700;color:${tc}">${ms.trend}</div>
-      <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
-        ${ms.HH ? badge('HH','#00d68f') : ''}${ms.HL ? badge('HL','#00d68f') : ''}
-        ${ms.LH ? badge('LH','#ff4d6d') : ''}${ms.LL ? badge('LL','#ff4d6d') : ''}
-        ${ms.bos ? badge('BOS','#ffaa00') : ''}
-      </div>
-    </div>
-    <div style="font-size:9px;color:var(--muted);margin-bottom:8px">EMA ALIGNMENT</div>
-    ${[
-      { l: 'EMA 20', v: sig.ema20, c: cur => cur > sig.ema20 ? '#00d68f' : '#ff4d6d' },
-      { l: 'EMA 50', v: sig.ema50, c: cur => cur > sig.ema50 ? '#00d68f' : '#ff4d6d' },
-    ].map(e => {
-      const c = sig.current > e.v ? '#00d68f' : '#ff4d6d'
-      return `<div class="str-row">
-        <span style="font-size:9px;color:var(--muted);width:50px">${e.l}</span>
-        <span style="font-size:11px;color:var(--text);flex:1">${e.v}</span>
-        <span style="font-size:9px;color:${c}">${sig.current > e.v ? '▲ Price above' : '▼ Price below'}</span>
-      </div>`
-    }).join('')}
-    <div style="margin-top:12px;padding:10px;background:var(--bg3);border-radius:6px;border-left:3px solid ${inst.color}">
-      <div style="font-size:9px;color:var(--muted);margin-bottom:4px">CONSECUTIVE TICKS</div>
-      <div style="font-family:'Rajdhani',sans-serif;font-size:20px;color:${sig.cons.dir === 'UP' ? '#00d68f' : '#ff4d6d'};font-weight:700">
-        ${sig.cons.count} × ${sig.cons.dir}
-      </div>
-      <div style="font-size:9px;color:var(--muted)">${sig.cons.count >= 5 ? 'Strong directional pressure' : sig.cons.count >= 3 ? 'Building momentum' : 'Mixed tick direction'}</div>
-    </div>`
+  const ms=sig.ms, tc=ms.trend==='BULLISH'?'var(--bull)':ms.trend==='BEARISH'?'var(--bear)':'var(--muted)'
+  const badge=(t,c)=>`<span style="font-size:8px;color:${c};background:${c}18;padding:1px 5px;border-radius:3px;margin-left:3px">${t}</span>`
+  document.getElementById('panel-structure').innerHTML=`<div class="card-label">MARKET STRUCTURE</div><div style="margin-bottom:12px"><div style="font-size:9px;color:var(--muted);margin-bottom:6px">TREND</div><div style="font-family:'Rajdhani',sans-serif;font-size:32px;font-weight:700;color:${tc}">${ms.trend}</div><div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">${ms.HH?badge('HH','#00d68f'):''}${ms.HL?badge('HL','#00d68f'):''}${ms.LH?badge('LH','#ff4d6d'):''}${ms.LL?badge('LL','#ff4d6d'):''}${ms.bos?badge('BOS','#ffaa00'):''}</div></div><div style="font-size:9px;color:var(--muted);margin-bottom:8px">EMA ALIGNMENT</div>${[{l:'EMA 20',v:sig.ema20},{l:'EMA 50',v:sig.ema50}].map(e=>{const c=sig.current>e.v?'#00d68f':'#ff4d6d';return `<div class="str-row"><span style="font-size:9px;color:var(--muted);width:50px">${e.l}</span><span style="font-size:11px;color:var(--text);flex:1">${e.v}</span><span style="font-size:9px;color:${c}">${sig.current>e.v?'▲ Above':'▼ Below'}</span></div>`}).join('')}<div style="margin-top:12px;padding:10px;background:var(--bg3);border-radius:6px;border-left:3px solid ${INSTRUMENTS[currentInst].color}"><div style="font-size:9px;color:var(--muted);margin-bottom:4px">CONSECUTIVE TICKS</div><div style="font-family:'Rajdhani',sans-serif;font-size:20px;color:${sig.cons.dir==='UP'?'#00d68f':'#ff4d6d'};font-weight:700">${sig.cons.count} × ${sig.cons.dir}</div><div style="font-size:9px;color:var(--muted)">${sig.cons.count>=5?'Strong directional pressure':sig.cons.count>=3?'Building momentum':'Mixed'}</div></div>`
 }
 
 function renderSpike(sig) {
-  const inst    = INSTRUMENTS[currentInst]
-  const spProb  = sig.spProb
-  const spLog   = spikeLog[currentInst]
-  const zc      = spProb.zoneColor
-
-  document.getElementById('panel-spike').innerHTML = `
-    <div class="card-label">SPIKE ANALYSIS</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-      <div style="background:var(--bg3);border-radius:6px;padding:12px;border:1px solid ${zc}30">
-        <div style="font-size:9px;color:var(--muted);margin-bottom:4px">SPIKE PROBABILITY</div>
-        <div style="font-family:'Rajdhani',sans-serif;font-size:36px;font-weight:700;color:${zc}">${spProb.pct}%</div>
-        <div style="font-size:9px;color:${zc}">${spProb.zone}</div>
-        <div style="height:4px;background:var(--dim);border-radius:2px;margin-top:8px;overflow:hidden">
-          <div style="height:100%;width:${spProb.pct}%;background:${zc};border-radius:2px"></div>
-        </div>
-      </div>
-      <div style="background:var(--bg3);border-radius:6px;padding:12px">
-        <div style="font-size:9px;color:var(--muted);margin-bottom:4px">TICKS SINCE SPIKE</div>
-        <div style="font-family:'Rajdhani',sans-serif;font-size:36px;font-weight:700;color:${zc}">${spProb.since}</div>
-        <div style="font-size:9px;color:var(--muted)">Avg: ${spProb.avg} ticks</div>
-      </div>
-    </div>
-
-    <div style="font-size:9px;color:var(--muted);margin-bottom:8px">ZONE GUIDE</div>
-    ${[
-      ['EARLY',    '0–25%',   '#2a4060', 'Spike just occurred or unlikely. Trade structure only.'],
-      ['BUILDING', '25–50%',  'var(--boom)', 'Probability building. Watch for setup.'],
-      ['WARM',     '50–80%',  'var(--warn)', 'Spike becoming likely. Prepare entry plan.'],
-      ['HOT',      '80–99%',  'var(--spike)', 'High spike probability. Strongest signal weight.'],
-    ].map(z => `
-      <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--bg3);border-radius:4px;margin-bottom:4px;border-left:3px solid ${z[2]};opacity:${spProb.zone === z[0] ? 1 : .4}">
-        <div>
-          <div style="font-size:10px;color:${z[2]};font-weight:700">${z[0]} (${z[1]})</div>
-          <div style="font-size:9px;color:var(--muted)">${z[3]}</div>
-        </div>
-        ${spProb.zone === z[0] ? `<span style="margin-left:auto;font-size:9px;color:${z[2]};background:${z[2]}18;padding:1px 6px;border-radius:3px">CURRENT</span>` : ''}
-      </div>`).join('')}
-
-    <div style="margin-top:12px;font-size:9px;color:var(--muted);margin-bottom:8px">RECENT SPIKE LOG</div>
-    ${spLog.slice(0,5).map((s,i) => `
-      <div style="display:flex;justify-content:space-between;padding:5px 8px;background:var(--bg3);border-radius:4px;margin-bottom:3px;border-left:3px solid var(--spike);opacity:${1-i*.15}">
-        <span style="font-size:9px;color:var(--spike)">⚡ ${s.dir}</span>
-        <span style="font-size:9px;color:var(--text)">${s.price}</span>
-        <span style="font-size:9px;color:var(--muted)">${s.time}</span>
-      </div>`).join('') || '<div style="font-size:10px;color:var(--muted);text-align:center;padding:8px">No spikes detected yet</div>'}`
+  const sp=sig.spProb, zc=sp.zoneColor, sl=spikeLog[currentInst]
+  document.getElementById('panel-spike').innerHTML=`<div class="card-label">SPIKE ANALYSIS</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px"><div style="background:var(--bg3);border-radius:6px;padding:12px;border:1px solid ${zc}30"><div style="font-size:9px;color:var(--muted);margin-bottom:4px">SPIKE PROBABILITY</div><div style="font-family:'Rajdhani',sans-serif;font-size:36px;font-weight:700;color:${zc}">${sp.pct}%</div><div style="font-size:9px;color:${zc}">${sp.zone}</div><div style="height:4px;background:var(--dim);border-radius:2px;margin-top:8px;overflow:hidden"><div style="height:100%;width:${sp.pct}%;background:${zc};border-radius:2px"></div></div></div><div style="background:var(--bg3);border-radius:6px;padding:12px"><div style="font-size:9px;color:var(--muted);margin-bottom:4px">TICKS SINCE SPIKE</div><div style="font-family:'Rajdhani',sans-serif;font-size:36px;font-weight:700;color:${zc}">${sp.since}</div><div style="font-size:9px;color:var(--muted)">Avg: ${sp.avg} ticks</div></div></div>${[['EARLY','0–25%','#2a4060','Spike unlikely. Trade structure only.'],['BUILDING','25–50%','var(--boom)','Probability building. Watch for setup.'],['WARM','50–80%','var(--warn)','Spike becoming likely. Prepare.'],['HOT','80–99%','var(--spike)','High probability. Strongest signal.']].map(z=>`<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--bg3);border-radius:4px;margin-bottom:4px;border-left:3px solid ${z[2]};opacity:${sp.zone===z[0]?1:.4}"><div><div style="font-size:10px;color:${z[2]};font-weight:700">${z[0]} (${z[1]})</div><div style="font-size:9px;color:var(--muted)">${z[3]}</div></div>${sp.zone===z[0]?`<span style="margin-left:auto;font-size:9px;color:${z[2]};background:${z[2]}18;padding:1px 6px;border-radius:3px">CURRENT</span>`:''}</div>`).join('')}<div style="margin-top:12px;font-size:9px;color:var(--muted);margin-bottom:8px">RECENT SPIKES</div>${sl.slice(0,5).map((s,i)=>`<div style="display:flex;justify-content:space-between;padding:5px 8px;background:var(--bg3);border-radius:4px;margin-bottom:3px;border-left:3px solid var(--spike);opacity:${1-i*.15}"><span style="font-size:9px;color:var(--spike)">⚡ ${s.dir}</span><span style="font-size:9px;color:var(--text)">${s.price}</span><span style="font-size:9px;color:var(--muted)">${s.time}</span></div>`).join('')||'<div style="font-size:10px;color:var(--muted);text-align:center;padding:8px">No spikes detected yet</div>'}`
 }
 
 function renderEntry(sig) {
-  const inst = INSTRUMENTS[currentInst]
-  const ps   = sig.psSetup
-  const isBoom = inst.type === 'boom'
-
-  const qColor = ps ? (ps.quality === 'PRIME' ? '#00d68f' : ps.quality === 'GOOD' ? '#00e5ff' : ps.quality === 'FAIR' ? '#ffaa00' : '#555') : '#555'
-
-  document.getElementById('panel-entry').innerHTML = `
-    <div class="card-label">POST-SPIKE ENTRY ANALYSIS</div>
-
-    <div style="background:var(--bg3);border-radius:8px;padding:14px;margin-bottom:12px;border:1px solid ${qColor}30">
-      <div style="font-size:9px;color:var(--muted);margin-bottom:4px">SETUP QUALITY</div>
-      <div style="font-family:'Rajdhani',sans-serif;font-size:36px;font-weight:700;color:${qColor}">${ps ? ps.quality : 'NO SPIKE'}</div>
-      ${ps ? `
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px">
-          <div style="text-align:center">
-            <div style="font-size:9px;color:var(--muted)">TICKS AGO</div>
-            <div style="font-family:'Rajdhani',sans-serif;font-size:22px;color:var(--text)">${ps.ticksAgo}</div>
-          </div>
-          <div style="text-align:center">
-            <div style="font-size:9px;color:var(--muted)">SPIKE PRICE</div>
-            <div style="font-family:'Rajdhani',sans-serif;font-size:16px;color:var(--text)">${ps.priceAtSpike}</div>
-          </div>
-          <div style="text-align:center">
-            <div style="font-size:9px;color:var(--muted)">RETRACEMENT</div>
-            <div style="font-family:'Rajdhani',sans-serif;font-size:18px;color:${ps.retracement > 0 ? '#00d68f' : '#ff4d6d'}">${ps.retracement > 0 ? '+' : ''}${ps.retracement}%</div>
-          </div>
-        </div>` : '<div style="font-size:10px;color:var(--muted);margin-top:6px">Wait for a spike to occur, then look for entry on retracement.</div>'}
-    </div>
-
-    <div style="font-size:9px;color:var(--muted);margin-bottom:8px">ENTRY PLAYBOOK — ${inst.name.toUpperCase()}</div>
-    ${isBoom ? `
-      <div class="entry-card" style="border-color:#00e5ff;background:rgba(0,229,255,.04)">
-        <div style="font-size:10px;color:#00e5ff;font-weight:700;margin-bottom:6px">⚡ AFTER BOOM SPIKE (UP candle)</div>
-        <div style="font-size:10px;color:var(--text);line-height:1.8">
-          1. Wait for spike to complete (price shoots up sharply)<br>
-          2. Watch for 3–10 tick pullback/consolidation below spike high<br>
-          3. Enter LONG when price forms a higher low and resumes upward<br>
-          4. SL: below the low formed after the spike<br>
-          5. TP: next resistance or previous spike high
-        </div>
-      </div>
-      <div class="entry-card" style="border-color:#ffaa00;background:rgba(255,170,0,.04);margin-top:8px">
-        <div style="font-size:10px;color:#ffaa00;font-weight:700;margin-bottom:6px">📊 TREND CONTINUATION (Between spikes)</div>
-        <div style="font-size:10px;color:var(--text);line-height:1.8">
-          1. Confirm bullish structure (HH+HL on tick chart)<br>
-          2. Price above EMA20 and EMA50<br>
-          3. Enter LONG on any pullback to EMA20<br>
-          4. Hold until next spike or structure break
-        </div>
-      </div>` : `
-      <div class="entry-card" style="border-color:#ff3d71;background:rgba(255,61,113,.04)">
-        <div style="font-size:10px;color:#ff3d71;font-weight:700;margin-bottom:6px">⚡ AFTER CRASH SPIKE (DOWN candle)</div>
-        <div style="font-size:10px;color:var(--text);line-height:1.8">
-          1. Wait for spike to complete (price drops sharply)<br>
-          2. Watch for 3–15 tick bounce/consolidation above spike low<br>
-          3. Enter SELL when bounce exhausts and price resumes downward<br>
-          4. SL: above the high formed after the spike bounce<br>
-          5. TP: next support or previous spike low
-        </div>
-      </div>
-      <div class="entry-card" style="border-color:#ffaa00;background:rgba(255,170,0,.04);margin-top:8px">
-        <div style="font-size:10px;color:#ffaa00;font-weight:700;margin-bottom:6px">📊 TREND RIDING (Between spikes)</div>
-        <div style="font-size:10px;color:var(--text);line-height:1.8">
-          1. Confirm bearish structure (LH+LL on tick chart)<br>
-          2. Price below EMA20 and EMA50<br>
-          3. Enter SELL on any pullback up to EMA20<br>
-          4. Exit before/at next crash spike
-        </div>
-      </div>`}`
+  const inst=INSTRUMENTS[currentInst], ps=sig.psSetup, isBoom=inst.type==='boom'
+  const qc=ps?({PRIME:'#00d68f',GOOD:'#00e5ff',FAIR:'#ffaa00',STALE:'#555'}[ps.quality]||'#555'):'#555'
+  document.getElementById('panel-entry').innerHTML=`<div class="card-label">POST-SPIKE ENTRY</div><div style="background:var(--bg3);border-radius:8px;padding:14px;margin-bottom:12px;border:1px solid ${qc}30"><div style="font-size:9px;color:var(--muted);margin-bottom:4px">SETUP QUALITY</div><div style="font-family:'Rajdhani',sans-serif;font-size:36px;font-weight:700;color:${qc}">${ps?ps.quality:'NO SPIKE YET'}</div>${ps?`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px"><div style="text-align:center"><div style="font-size:9px;color:var(--muted)">TICKS AGO</div><div style="font-family:'Rajdhani',sans-serif;font-size:22px;color:var(--text)">${ps.ticksAgo}</div></div><div style="text-align:center"><div style="font-size:9px;color:var(--muted)">SPIKE PRICE</div><div style="font-family:'Rajdhani',sans-serif;font-size:14px;color:var(--text)">${ps.priceAtSpike}</div></div><div style="text-align:center"><div style="font-size:9px;color:var(--muted)">RETRACE</div><div style="font-family:'Rajdhani',sans-serif;font-size:18px;color:${ps.retracement>0?'#00d68f':'#ff4d6d'}">${ps.retracement>0?'+':''}${ps.retracement}%</div></div></div>`:'<div style="font-size:10px;color:var(--muted);margin-top:6px">Wait for a spike, then look for entry on retracement.</div>'}</div>${isBoom?`<div class="entry-card" style="border-color:#00e5ff;background:rgba(0,229,255,.04)"><div style="font-size:10px;color:#00e5ff;font-weight:700;margin-bottom:6px">⚡ AFTER BOOM SPIKE (UP)</div><div style="font-size:10px;color:var(--text);line-height:1.8">1. Wait for spike to complete<br>2. Watch for 3–10 tick pullback below spike high<br>3. Enter LONG when price forms higher low<br>4. SL: below the post-spike low<br>5. TP: next resistance or previous spike high</div></div>`:`<div class="entry-card" style="border-color:#ff3d71;background:rgba(255,61,113,.04)"><div style="font-size:10px;color:#ff3d71;font-weight:700;margin-bottom:6px">⚡ AFTER CRASH SPIKE (DOWN)</div><div style="font-size:10px;color:var(--text);line-height:1.8">1. Wait for spike to complete<br>2. Watch for 3–15 tick bounce above spike low<br>3. Enter SELL when bounce exhausts<br>4. SL: above the post-spike bounce high<br>5. TP: next support or previous spike low</div></div>`}`
 }
 
 function renderMomentum(sig) {
-  const mom = sig.mom
-  document.getElementById('panel-momentum').innerHTML = `
-    <div class="card-label">MOMENTUM ANALYSIS</div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
-      ${[
-        { l: 'ROC (20 ticks)', v: `${mom.roc > 0 ? '+' : ''}${mom.roc}%`, c: mom.roc > 0 ? '#00d68f' : '#ff4d6d' },
-        { l: 'ACCELERATION',   v: `${mom.acceleration > 0 ? '+' : ''}${mom.acceleration}%`, c: mom.acceleration > 0 ? '#00d68f' : '#ff4d6d' },
-        { l: 'EMA DEVIATION',  v: `${mom.dev > 0 ? '+' : ''}${mom.dev}%`, c: mom.overextended ? '#ffaa00' : '#00e5ff' },
-      ].map(m => `
-        <div style="background:var(--bg3);border-radius:6px;padding:10px">
-          <div style="font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:3px">${m.l}</div>
-          <div style="font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:${m.c}">${m.v}</div>
-        </div>`).join('')}
-    </div>
-
-    <div style="display:flex;flex-direction:column;gap:5px">
-      ${[
-        { l: 'Overextended from EMA', active: mom.overextended, desc: 'Price far from EMA — mean reversion likely', c: '#ffaa00' },
-        { l: 'Positive Momentum',     active: mom.roc > 0,      desc: 'Upward rate of change over 20 ticks',       c: '#00d68f' },
-        { l: 'Negative Momentum',     active: mom.roc < 0,      desc: 'Downward rate of change over 20 ticks',     c: '#ff4d6d' },
-        { l: 'Accelerating',          active: mom.acceleration > 0 && mom.roc > 0, desc: 'Upward move gaining speed', c: '#00d68f' },
-        { l: 'Decelerating',          active: mom.acceleration < 0 && mom.roc > 0, desc: 'Upward move slowing — potential reversal', c: '#ffaa00' },
-      ].map(f => `
-        <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--bg3);border-radius:4px;opacity:${f.active ? 1 : .3}">
-          <div style="width:6px;height:6px;border-radius:50%;background:${f.active ? f.c : 'var(--muted)'}"></div>
-          <div>
-            <div style=\"font-size:10px;color:${f.active ? f.c : 'var(--muted)'};font-weight:${f.active ? 700 : 400}\">${f.l}</div>
-            <div style="font-size:9px;color:var(--muted)">${f.desc}</div>
-          </div>
-        </div>`).join('')}
-    </div>`
+  const mom=sig.mom
+  document.getElementById('panel-momentum').innerHTML=`<div class="card-label">MOMENTUM ANALYSIS</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">${[{l:'ROC (20)',v:`${mom.roc>0?'+':''}${mom.roc}%`,c:mom.roc>0?'#00d68f':'#ff4d6d'},{l:'ACCEL',v:`${mom.acceleration>0?'+':''}${mom.acceleration}%`,c:mom.acceleration>0?'#00d68f':'#ff4d6d'},{l:'EMA DEV',v:`${mom.dev>0?'+':''}${mom.dev}%`,c:mom.overextended?'#ffaa00':'#00e5ff'}].map(m=>`<div style="background:var(--bg3);border-radius:6px;padding:10px"><div style="font-size:8px;color:var(--muted);margin-bottom:3px">${m.l}</div><div style="font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:${m.c}">${m.v}</div></div>`).join('')}</div>${[{l:'Positive Momentum',a:mom.roc>0,d:'Upward ROC over 20 ticks',c:'#00d68f'},{l:'Negative Momentum',a:mom.roc<0,d:'Downward ROC over 20 ticks',c:'#ff4d6d'},{l:'Overextended from EMA',a:mom.overextended,d:'Mean reversion likely',c:'#ffaa00'},{l:'Accelerating Up',a:mom.acceleration>0&&mom.roc>0,d:'Upward move gaining speed',c:'#00d68f'},{l:'Decelerating',a:mom.acceleration<0&&mom.roc>0,d:'Upward move slowing — watch for reversal',c:'#ffaa00'}].map(f=>`<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--bg3);border-radius:4px;margin-bottom:4px;opacity:${f.a?1:.3}"><div style="width:6px;height:6px;border-radius:50%;background:${f.a?f.c:'var(--muted)'}"></div><div><div style="font-size:10px;color:${f.a?f.c:'var(--muted)'};font-weight:${f.a?700:400}">${f.l}</div><div style="font-size:9px;color:var(--muted)">${f.d}</div></div></div>`).join('')}`
 }
 
 function renderConfluences(sig) {
-  document.getElementById('panel-confluences').innerHTML = `
-    <div class="card-label">ALL CONFLUENCES</div>
-    ${sig.confluences.filter(c => c.bull !== null).map(c => `
-      <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--bg3);border-radius:4px;margin-bottom:4px;border-left:3px solid ${c.bull ? '#00d68f' : '#ff4d6d'}">
-        <span style="font-size:10px;color:var(--text);flex:1">${c.text}</span>
-        <span style="font-size:11px;color:${c.bull ? '#00d68f' : '#ff4d6d'}">${c.bull ? '▲' : '▼'}</span>
-      </div>`).join('')}
-    ${sig.confluences.filter(c => c.bull === null).map(c => `
-      <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--bg3);border-radius:4px;margin-bottom:4px;border-left:3px solid #ffaa00">
-        <span style="font-size:10px;color:var(--text);flex:1">${c.text}</span>
-        <span style="font-size:11px;color:#ffaa00">◈</span>
-      </div>`).join('')}`
+  document.getElementById('panel-confluences').innerHTML=`<div class="card-label">ALL CONFLUENCES</div>${sig.confluences.filter(c=>c.bull!==null).map(c=>`<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--bg3);border-radius:4px;margin-bottom:4px;border-left:3px solid ${c.bull?'#00d68f':'#ff4d6d'}"><span style="font-size:10px;color:var(--text);flex:1">${c.text}</span><span style="font-size:11px;color:${c.bull?'#00d68f':'#ff4d6d'}">${c.bull?'▲':'▼'}</span></div>`).join('')}${sig.confluences.filter(c=>c.bull===null).map(c=>`<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--bg3);border-radius:4px;margin-bottom:4px;border-left:3px solid #ffaa00"><span style="font-size:10px;color:var(--text);flex:1">${c.text}</span><span style="font-size:11px;color:#ffaa00">◈</span></div>`).join('')}`
 }
 
-function renderSpikeLog() {
-  const spLog = spikeLog[currentInst]
-  if (!spLog.length) return
-  document.getElementById('spike-log').innerHTML = spLog.slice(0, 10).map((s, i) => `
-    <div class="spike-entry" style="opacity:${1 - i * .08}">
-      <span style="font-size:10px;color:var(--spike)">⚡ ${s.dir}</span>
-      <span style="font-size:9px;color:var(--text)">${s.price}</span>
-      <span style="font-size:9px;color:var(--muted)">${s.time}</span>
-    </div>`).join('')
-}
-
-function renderPatterns(sig) {
-  const ms   = sig.ms
-  const mom  = sig.mom
-  const cons = sig.cons
-  const pts  = []
-
-  if (cons.count >= 5 && cons.dir === 'UP')   pts.push({ name: `${cons.count}-tick bullish run`, bull: true })
-  if (cons.count >= 5 && cons.dir === 'DOWN') pts.push({ name: `${cons.count}-tick bearish run`, bull: false })
-  if (mom.overextended && mom.roc > 0)        pts.push({ name: 'Overextended up — mean reversion watch', bull: null })
-  if (mom.overextended && mom.roc < 0)        pts.push({ name: 'Overextended down — mean reversion watch', bull: null })
-  if (ms.bos && ms.trend === 'BULLISH')       pts.push({ name: 'Bullish BOS — continuation signal', bull: true })
-  if (ms.bos && ms.trend === 'BEARISH')       pts.push({ name: 'Bearish BOS — continuation signal', bull: false })
-
-  document.getElementById('patterns-body').innerHTML = pts.length
-    ? pts.map(p => `
-        <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--bg3);border-radius:4px;margin-bottom:3px">
-          <span>${p.bull === true ? '🟢' : p.bull === false ? '🔴' : '🟡'}</span>
-          <span style="font-size:10px;color:${p.bull ? '#00d68f' : p.bull === false ? '#ff4d6d' : '#ffaa00'}">${p.name}</span>
-        </div>`).join('')
-    : '<div style="font-size:9px;color:var(--muted)">No major patterns currently</div>'
-}
-
-function renderHistory() {
-  if (!history.length) return
-  document.getElementById('history-body').innerHTML = history.map((h, i) => {
-    const c = h.dir === 'BUY' ? '#00d68f' : h.dir === 'SELL' ? '#ff4d6d' : '#ffaa00'
-    return `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--dim);opacity:${1 - i * .07}">
-      <span style="font-size:10px;color:${c};font-weight:700">${h.dir}</span>
-      <span style="font-size:9px;color:var(--muted)">${h.symbol}</span>
-      <span style="font-size:9px;color:var(--dim)">${h.time}</span>
-    </div>`
-  }).join('')
-}
-
-function renderAll() {
-  const sig = signal[currentInst]
-  if (!sig) return
-
-  renderHero(sig)
-  renderInstInfo()
-  renderStructure(sig)
-  renderSpike(sig)
-  renderEntry(sig)
-  renderMomentum(sig)
-  renderConfluences(sig)
-  renderSpikeLog()
-  renderPatterns(sig)
-  renderHistory()
-  drawChart()
-
-  // Track history
-  history.unshift({ dir: sig.dirLabel, symbol: INSTRUMENTS[currentInst].name, time: new Date().toLocaleTimeString() })
-  history = history.slice(0, 20)
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   TAB / INSTRUMENT SWITCHING
-═══════════════════════════════════════════════════════════════ */
-let currentTab = 'structure'
-function switchTab(name, btn) {
-  currentTab = name
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'))
-  btn.classList.add('on')
-  document.querySelectorAll('[id^="panel-"]').forEach(p => p.style.display = 'none')
-  const p = document.getElementById(`panel-${name}`)
-  if (p) { p.style.display = ''; p.classList.remove('fadein'); void p.offsetWidth; p.classList.add('fadein') }
-}
-
-function switchInstrument(key, btn) {
-  currentInst = key
-  const inst  = INSTRUMENTS[key]
-  document.querySelectorAll('.inst-tab').forEach(t => { t.classList.remove('on'); t.classList.remove('boom'); t.classList.remove('crash') })
-  btn.classList.add('on')
-  btn.classList.add(inst.type)
-  // Recompute and render
-  if (ticks[key].length > 10) {
-    signal[key] = computeSignal(key)
-    renderAll()
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════
    AI BRIEF
-═══════════════════════════════════════════════════════════════ */
+═══════════════════════════════════════════════════ */
 async function getAI() {
-  const sig  = signal[currentInst]
-  const inst = INSTRUMENTS[currentInst]
-  if (!sig) return
-  if (!ANT_KEY || ANT_KEY === 'YOUR_NEW_ANTHROPIC_KEY_HERE') { document.getElementById('ai-output').innerHTML = '<div style="color:var(--crash);font-size:10px;padding:10px">Add your Anthropic key to the ANT_KEY variable in the HTML file.</div>'; return }
-
-  const btn = document.getElementById('ai-btn')
-  btn.textContent = '⟳ Analyzing...'; btn.disabled = true
-  document.getElementById('ai-output').innerHTML = `<div style="display:flex;align-items:center;gap:10px;color:var(--boom);font-size:10px;padding:10px"><div class="spinner spin" style="width:13px;height:13px;border-width:2px"></div>Synthesising spike data, structure, and momentum…</div>`
-
-  const spLog  = spikeLog[currentInst].slice(0, 3)
-  const bullC  = sig.confluences.filter(c => c.bull === true).map(c => c.text).join('; ')
-  const bearC  = sig.confluences.filter(c => c.bull === false).map(c => c.text).join('; ')
-
-  const prompt = `You are an expert trader specialising in Deriv synthetic indices, specifically Boom and Crash instruments. Give a concise 4-sentence professional trade brief.
-
-INSTRUMENT: ${inst.name} (${inst.desc})
-SPIKE TYPE: ${inst.direction === 'UP' ? 'Upward spikes (Boom)' : 'Downward spikes (Crash)'}
-
-SIGNAL: ${sig.dirLabel} | Score: ${sig.score} | Confidence: ${sig.confidence}%
-Entry: ${sig.current} | SL: ${sig.sl} | TP1: ${sig.tp1} | TP2: ${sig.tp2} | R:R 1:${sig.rr}
-
-MARKET STRUCTURE: ${sig.ms.trend} | BOS: ${sig.ms.bos} | ${sig.ms.HH?'HH ':''} ${sig.ms.HL?'HL ':''} ${sig.ms.LH?'LH ':''} ${sig.ms.LL?'LL ':''}
-EMA20: ${sig.ema20} | EMA50: ${sig.ema50} | Price: ${sig.current}
-
-SPIKE DATA:
-- Ticks since last spike: ${sig.spProb.since}
-- Spike probability zone: ${sig.spProb.zone} (${sig.spProb.pct}%)
-- Avg spike interval: ~${inst.avgInterval} ticks
-- Recent spikes: ${spLog.map(s => `${s.dir} at ${s.price} (${s.time})`).join(', ') || 'None logged yet'}
-
-POST-SPIKE SETUP: ${sig.psSetup ? `${sig.psSetup.quality} quality — ${sig.psSetup.ticksAgo} ticks ago, ${sig.psSetup.retracement}% retracement` : 'No recent spike'}
-
-MOMENTUM: ROC ${sig.mom.roc}% | Acceleration ${sig.mom.acceleration}% | Overextended: ${sig.mom.overextended}
-Consecutive ticks: ${sig.cons.count} × ${sig.cons.dir}
-
-BULLISH FACTORS: ${bullC || 'None'}
-BEARISH FACTORS: ${bearC || 'None'}
-
-Write exactly 4 sentences: (1) Current structure and trend bias, (2) Spike probability and what to expect, (3) Specific entry trigger and timing, (4) Invalidation level and key risk.`
-
+  const sig=signals[currentInst], inst=INSTRUMENTS[currentInst]
+  if(!sig) return
+  const btn=document.getElementById('ai-btn')
+  btn.textContent='⟳ Analyzing...'; btn.disabled=true
+  document.getElementById('ai-output').innerHTML=`<div style="display:flex;align-items:center;gap:10px;color:var(--boom);font-size:10px;padding:10px"><div class="spinner spin" style="width:13px;height:13px;border-width:2px"></div>Generating trade brief…</div>`
+  const bullC=sig.confluences.filter(c=>c.bull===true).map(c=>c.text).join('; ')
+  const bearC=sig.confluences.filter(c=>c.bull===false).map(c=>c.text).join('; ')
+  const prompt=`You are an expert Deriv synthetic indices trader specialising in Boom and Crash instruments. Write a concise 4-sentence professional trade brief.\n\nINSTRUMENT: ${inst.name} (${inst.desc})\nSIGNAL: ${sig.dirLabel} | Score: ${sig.score} | Confidence: ${sig.confidence}%\nEntry: ${sig.current} | SL: ${sig.sl} | TP1: ${sig.tp1} | TP2: ${sig.tp2} | R:R 1:${sig.rr}\nSTRUCTURE: ${sig.ms.trend} | BOS: ${sig.ms.bos}\nSPIKE ZONE: ${sig.spProb.zone} (${sig.spProb.pct}%) | Ticks since spike: ${sig.spProb.since}\nPOST-SPIKE: ${sig.psSetup?sig.psSetup.quality+' — '+sig.psSetup.ticksAgo+' ticks ago':'No recent spike'}\nMOMENTUM: ROC ${sig.mom.roc}% | Overextended: ${sig.mom.overextended}\nBULLISH: ${bullC||'None'}\nBEARISH: ${bearC||'None'}\n\nWrite exactly 4 sentences: (1) structure/trend bias, (2) spike probability and timing, (3) entry trigger, (4) invalidation and risk.`
   try {
-    const res  = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANT_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
-    })
-    const data = await res.json()
-    if (data.error) {
-      document.getElementById('ai-output').innerHTML = `<div style="color:var(--crash);font-size:10px;padding:10px">Error: ${data.error.message || JSON.stringify(data.error)}</div>`
-    } else {
-      const txt = data?.content?.[0]?.text || 'No response.'
-      document.getElementById('ai-output').innerHTML = `<div style="font-size:11px;line-height:1.8;color:var(--text);background:var(--bg3);padding:12px;border-radius:6px;border-left:3px solid var(--boom);white-space:pre-wrap">${txt}</div>`
-    }
-  } catch (e) {
-    document.getElementById('ai-output').innerHTML = `<div style="color:var(--crash);font-size:10px;padding:10px">Request failed: ${e.message}</div>`
+    const res=await fetch('/.netlify/functions/brief',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:[{role:'user',content:prompt}]})})
+    const data=await res.json()
+    if(data.error) document.getElementById('ai-output').innerHTML=`<div style="color:var(--crash);font-size:10px;padding:10px">Error: ${data.error}</div>`
+    else document.getElementById('ai-output').innerHTML=`<div style="font-size:11px;line-height:1.8;color:var(--text);background:var(--bg3);padding:12px;border-radius:6px;border-left:3px solid var(--boom);white-space:pre-wrap">${data.text}</div>`
+  } catch(e) {
+    document.getElementById('ai-output').innerHTML=`<div style="color:var(--crash);font-size:10px;padding:10px">Request failed: ${e.message}</div>`
   }
-  btn.textContent = '⚡ GENERATE'; btn.disabled = false
+  btn.textContent='⚡ GENERATE'; btn.disabled=false
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   BOOT
-═══════════════════════════════════════════════════════════════ */
-connectAll()
+/* ═══════════════════════════════════════════════════
+   TAB / INSTRUMENT SWITCHING
+═══════════════════════════════════════════════════ */
+function switchTab(name,btn) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on')); btn.classList.add('on')
+  document.querySelectorAll('[id^="panel-"]').forEach(p=>p.style.display='none')
+  const p=document.getElementById('panel-'+name)
+  if(p){p.style.display='';p.classList.remove('fadein');void p.offsetWidth;p.classList.add('fadein')}
+}
 
-// Timeout if no data in 10s
-setTimeout(() => {
-  if (document.getElementById('loading-screen').style.display !== 'none') {
-    document.getElementById('loading-screen').style.display = 'none'
-    document.getElementById('error-screen').style.display  = 'flex'
-    const em = document.getElementById('error-msg')
-    if (!em.textContent) em.textContent = 'Could not connect to Deriv WebSocket after 15 seconds. Check your internet and try again.'
-  }
-}, 15000)
+function switchInstrument(key,btn) {
+  currentInst=key; const inst=INSTRUMENTS[key]
+  document.querySelectorAll('.inst-tab').forEach(t=>{t.classList.remove('on','boom','crash')})
+  btn.classList.add('on',inst.type)
+  if(ticks[key].length>10){signals[key]=computeSignal(key);renderAll()}
+}
+
+/* ═══════════════════════════════════════════════════
+   BOOT — poll every 2 seconds
+═══════════════════════════════════════════════════ */
+pollAll()
+setInterval(pollAll, 2000)
 </script>
 </body>
 </html>
