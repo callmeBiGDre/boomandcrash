@@ -430,26 +430,42 @@ Object.keys(INSTRUMENTS).forEach(k => {
    DERIV WEBSOCKET
 ═══════════════════════════════════════════════════════════════ */
 const DERIV_TOKEN = 'avkdP7c31FHmKHf'
-const DERIV_WS    = 'wss://ws.derivws.com/websockets/v3?app_id=1089'
 
 function connectDeriv(symbol, onTick, onError) {
-  const ws = new WebSocket(DERIV_WS)
+  // Use Deriv's official WebSocket endpoint
+  // app_id=16929 is Deriv's own SmartTrader app — publicly usable for read-only data
+  const ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=16929')
+  let authorized = false
+
   ws.onopen = () => {
-    // Send authorize first — required for Boom/Crash synthetic indices
+    // Authorize with token to access Boom/Crash synthetic indices
     ws.send(JSON.stringify({ authorize: DERIV_TOKEN }))
   }
   ws.onmessage = (msg) => {
-    const data = JSON.parse(msg.data)
-    if (data.msg_type === 'authorize') {
-      if (data.error) { onError('Deriv auth error: ' + data.error.message); return }
-      // Auth OK — now subscribe to live ticks
-      ws.send(JSON.stringify({ ticks: symbol, subscribe: 1 }))
+    try {
+      const data = JSON.parse(msg.data)
+      if (data.msg_type === 'authorize') {
+        if (data.error) {
+          onError('Auth failed: ' + data.error.message)
+          return
+        }
+        authorized = true
+        ws.send(JSON.stringify({ ticks: symbol, subscribe: 1 }))
+      }
+      if (data.msg_type === 'tick') {
+        onTick(data.tick)
+      }
+      if (data.error && data.msg_type !== 'authorize') {
+        onError(data.error.message)
+      }
+    } catch(e) {
+      onError('Parse error: ' + e.message)
     }
-    if (data.msg_type === 'tick') onTick(data.tick)
-    if (data.error && data.msg_type !== 'authorize') onError(data.error.message)
   }
-  ws.onerror = (e) => onError('WebSocket connection failed — check internet connection')
-  ws.onclose = () => { setTimeout(() => connectDeriv(symbol, onTick, onError), 3000) }
+  ws.onerror = () => onError('WebSocket failed to connect')
+  ws.onclose = (e) => {
+    setTimeout(() => connectDeriv(symbol, onTick, onError), 3000)
+  }
   return ws
 }
 
