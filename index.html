@@ -363,6 +363,11 @@ body::after{
 
 <script>
 /* ═══════════════════════════════════════════════════════════════
+   API KEY — Replace with your new Anthropic key after regenerating
+═══════════════════════════════════════════════════════════════ */
+const ANT_KEY = 'YOUR_NEW_ANTHROPIC_KEY_HERE'
+
+/* ═══════════════════════════════════════════════════════════════
    INSTRUMENT CONFIG
 ═══════════════════════════════════════════════════════════════ */
 const INSTRUMENTS = {
@@ -424,19 +429,24 @@ Object.keys(INSTRUMENTS).forEach(k => {
 /* ═══════════════════════════════════════════════════════════════
    DERIV WEBSOCKET
 ═══════════════════════════════════════════════════════════════ */
+const DERIV_TOKEN  = 'avkdP7c31FHmKHf'
+const DERIV_APP_ID = '1089'
+
 function connectDeriv(symbol, onTick, onError) {
-  const ws = new WebSocket('wss://ws.binaryws.com/websockets/v3?app_id=1089')
+  const ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${DERIV_APP_ID}`)
   ws.onopen = () => {
-    ws.send(JSON.stringify({ ticks: symbol, subscribe: 1 }))
+    ws.send(JSON.stringify({ authorize: DERIV_TOKEN }))
   }
   ws.onmessage = (msg) => {
     const data = JSON.parse(msg.data)
+    if (data.msg_type === 'authorize') {
+      ws.send(JSON.stringify({ ticks: symbol, subscribe: 1 }))
+    }
     if (data.msg_type === 'tick') onTick(data.tick)
     if (data.error) onError(data.error.message)
   }
   ws.onerror = () => onError('WebSocket error')
   ws.onclose = () => {
-    // Reconnect after 3s
     setTimeout(() => connectDeriv(symbol, onTick, onError), 3000)
   }
   return ws
@@ -1200,6 +1210,7 @@ async function getAI() {
   const sig  = signal[currentInst]
   const inst = INSTRUMENTS[currentInst]
   if (!sig) return
+  if (!ANT_KEY || ANT_KEY === 'YOUR_NEW_ANTHROPIC_KEY_HERE') { document.getElementById('ai-output').innerHTML = '<div style="color:var(--crash);font-size:10px;padding:10px">Add your Anthropic key to the ANT_KEY variable in the HTML file.</div>'; return }
 
   const btn = document.getElementById('ai-btn')
   btn.textContent = '⟳ Analyzing...'; btn.disabled = true
@@ -1237,12 +1248,22 @@ BEARISH FACTORS: ${bearC || 'None'}
 Write exactly 4 sentences: (1) Current structure and trend bias, (2) Spike probability and what to expect, (3) Specific entry trigger and timing, (4) Invalidation level and key risk.`
 
   try {
-    const res  = await fetch('/.netlify/functions/brief', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] }) })
+    const res  = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANT_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+    })
     const data = await res.json()
     if (data.error) {
-      document.getElementById('ai-output').innerHTML = `<div style="color:var(--crash);font-size:10px;padding:10px">Error: ${data.error}</div>`
-    } else if (data.text) {
-      document.getElementById('ai-output').innerHTML = `<div style="font-size:11px;line-height:1.8;color:var(--text);background:var(--bg3);padding:12px;border-radius:6px;border-left:3px solid var(--boom);white-space:pre-wrap">${data.text}</div>`
+      document.getElementById('ai-output').innerHTML = `<div style="color:var(--crash);font-size:10px;padding:10px">Error: ${data.error.message || JSON.stringify(data.error)}</div>`
+    } else {
+      const txt = data?.content?.[0]?.text || 'No response.'
+      document.getElementById('ai-output').innerHTML = `<div style="font-size:11px;line-height:1.8;color:var(--text);background:var(--bg3);padding:12px;border-radius:6px;border-left:3px solid var(--boom);white-space:pre-wrap">${txt}</div>`
     }
   } catch (e) {
     document.getElementById('ai-output').innerHTML = `<div style="color:var(--crash);font-size:10px;padding:10px">Request failed: ${e.message}</div>`
